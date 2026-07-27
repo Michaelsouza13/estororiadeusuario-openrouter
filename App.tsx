@@ -1,6 +1,6 @@
 
 import React, { useState, useRef, useEffect } from 'react';
-import { analyzeStory } from './services/aiService';
+import { analyzeStory, lastAIUsage } from './services/aiService';
 import { parseFile } from './utils/fileParser';
 import { AnalysisResult, AnalysisStatus } from './types';
 import { 
@@ -21,7 +21,7 @@ import KnowledgeBase from './components/KnowledgeBase';
 import { 
   BookOpen, Upload, Play, Loader2, Download, AlertCircle, 
   FileText, History, User, Shuffle, UserCheck, Search, 
-  Plus, Pencil, Trash2, X, Check, ChevronDown, Edit2, Star, Settings 
+  Plus, Pencil, Trash2, X, Check, ChevronDown, Edit2, Star, Settings, Cpu, DollarSign 
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 
@@ -81,9 +81,16 @@ const App: React.FC = () => {
   const [editingOwnerIndex, setEditingOwnerIndex] = useState<number | null>(null);
   const [editingValue, setEditingValue] = useState('');
   const [newOwnerValue, setNewOwnerValue] = useState('');
-  const [samplingRate, setSamplingRate] = useState(40); // Padrão 40%
+  const [samplingRate, setSamplingRate] = useState(40);
+  const [useFreeModel, setUseFreeModel] = useState(() => {
+    const saved = localStorage.getItem('storyanalyst_use_free');
+    return saved !== null ? JSON.parse(saved) : true;
+  });
+  const [isConfigOpen, setIsConfigOpen] = useState(false);
+  const [usageDisplay, setUsageDisplay] = useState<{ model: string; tokens?: number; cost?: number } | null>(null);
   
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const configRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -100,6 +107,10 @@ const App: React.FC = () => {
       localStorage.setItem(STORAGE_KEY_OWNERS, JSON.stringify(agilistas));
     }
   }, [agilistas]);
+
+  useEffect(() => {
+    localStorage.setItem('storyanalyst_use_free', JSON.stringify(useFreeModel));
+  }, [useFreeModel]);
 
   useEffect(() => {
     const loadHistory = async () => {
@@ -126,6 +137,9 @@ const App: React.FC = () => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setIsDropdownOpen(false);
         setEditingOwnerIndex(null);
+      }
+      if (configRef.current && !configRef.current.contains(event.target as Node)) {
+        setIsConfigOpen(false);
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
@@ -173,7 +187,8 @@ const App: React.FC = () => {
     setStatus(AnalysisStatus.LOADING);
     setResults([]); 
     try {
-      const result = await analyzeStory(inputText);
+      const result = await analyzeStory(inputText, useFreeModel);
+      setUsageDisplay(lastAIUsage);
       const fullResult: AnalysisResult = {
         ...result,
         date: new Date().toLocaleDateString('pt-BR'),
@@ -291,7 +306,10 @@ const App: React.FC = () => {
       const batchSize = 3; 
       for (let i = 0; i < rowsToProcess.length; i += batchSize) {
         const batch = rowsToProcess.slice(i, i + batchSize);
-        const batchResults = await Promise.all(batch.map(row => analyzeStory(row.story).then(res => ({
+        const batchResults = await Promise.all(batch.map(row => analyzeStory(row.story, useFreeModel).then(res => {
+              setUsageDisplay(lastAIUsage);
+              return res;
+            }).then(res => ({
             ...res,
             id: row.id,
             owner: row.owner || defaultOwner,
@@ -351,6 +369,73 @@ const App: React.FC = () => {
             <h1 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-700 to-blue-500">
               StoryAnalyst AI
             </h1>
+            <div className="relative ml-3" ref={configRef}>
+              <button
+                onClick={() => setIsConfigOpen(!isConfigOpen)}
+                className="p-2 rounded-xl hover:bg-slate-100 transition-all active:scale-90"
+                title="Configurações"
+              >
+                <Settings size={18} className="text-slate-400" />
+              </button>
+              {isConfigOpen && (
+                <div className="absolute right-0 mt-2 w-72 bg-white border border-slate-200 rounded-2xl shadow-2xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+                  <div className="p-4 border-b border-slate-100">
+                    <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                      <Settings size={14} /> Configurações
+                    </h4>
+                  </div>
+                  <div className="p-4 space-y-4">
+                    <div>
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 flex items-center gap-1">
+                        <Cpu size={12} /> Modelo de IA
+                      </p>
+                      <div className="space-y-2">
+                        <label className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all ${useFreeModel ? 'bg-blue-50 border-2 border-blue-200' : 'bg-slate-50 border-2 border-transparent'}`}>
+                          <input
+                            type="radio"
+                            name="model"
+                            checked={useFreeModel}
+                            onChange={() => setUseFreeModel(true)}
+                            className="accent-blue-600"
+                          />
+                          <div>
+                            <p className="text-xs font-bold text-slate-700">Free</p>
+                            <p className="text-[10px] text-slate-400">sem custo, 50 req/dia</p>
+                          </div>
+                        </label>
+                        <label className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all ${!useFreeModel ? 'bg-blue-50 border-2 border-blue-200' : 'bg-slate-50 border-2 border-transparent'}`}>
+                          <input
+                            type="radio"
+                            name="model"
+                            checked={!useFreeModel}
+                            onChange={() => setUseFreeModel(false)}
+                            className="accent-blue-600"
+                          />
+                          <div>
+                            <p className="text-xs font-bold text-slate-700">DeepSeek V3 + Llama 70B</p>
+                            <p className="text-[10px] text-slate-400">requer créditos OpenRouter</p>
+                          </div>
+                        </label>
+                      </div>
+                    </div>
+                    <div className="border-t border-slate-100 pt-4">
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 flex items-center gap-1">
+                        <DollarSign size={12} /> Última consulta
+                      </p>
+                      {usageDisplay ? (
+                        <div className="space-y-1 text-[11px]">
+                          <p className="text-slate-600"><span className="font-bold">Modelo:</span> {usageDisplay.model}</p>
+                          <p className="text-slate-600"><span className="font-bold">Tokens:</span> {usageDisplay.tokens ?? '-'}</p>
+                          <p className="text-slate-600"><span className="font-bold">Custo:</span> {usageDisplay.cost != null ? `$${usageDisplay.cost.toFixed(6)}` : '-'}</p>
+                        </div>
+                      ) : (
+                        <p className="text-[11px] text-slate-400 italic">Nenhuma consulta ainda</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
           <div className="flex bg-gray-100 p-1 rounded-lg">
             {['single', 'bulk', 'history', 'knowledge'].map((tab) => (

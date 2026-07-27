@@ -3,10 +3,8 @@ import { AnalysisResult } from "../types";
 import { getRandomReferences } from "../utils/storage";
 
 const OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions";
-const MODELS = [
-  "deepseek/deepseek-chat",
-  "meta-llama/llama-3.1-70b-instruct"
-];
+
+export let lastAIUsage: { model: string; tokens?: number; cost?: number } | null = null;
 
 const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -90,8 +88,12 @@ const buildSystemPrompt = (referenceExamples: AnalysisResult[]): string => {
   `;
 };
 
-export const analyzeStory = async (story: string): Promise<AnalysisResult> => {
+export const analyzeStory = async (story: string, useFree: boolean = true): Promise<AnalysisResult> => {
   const cleanedStory = cleanStoryText(story);
+
+  const models = useFree
+    ? ["openrouter/free"]
+    : ["deepseek/deepseek-chat", "meta-llama/llama-3.1-70b-instruct"];
 
   const referenceExamples = await getRandomReferences(3);
   const systemPrompt = buildSystemPrompt(referenceExamples);
@@ -111,7 +113,7 @@ export const analyzeStory = async (story: string): Promise<AnalysisResult> => {
           "X-Title": "StoryAnalyst AI"
         },
         body: JSON.stringify({
-          models: MODELS,
+          models,
           route: "fallback",
           messages: [
             { role: "system", content: systemPrompt },
@@ -132,6 +134,15 @@ export const analyzeStory = async (story: string): Promise<AnalysisResult> => {
       if (!content) throw new Error("No response from AI");
 
       const result = JSON.parse(content);
+
+      lastAIUsage = {
+        model: data.model,
+        tokens: data.usage?.total_tokens,
+        cost: data.usage?.cost
+      };
+      console.log("🤖 Modelo:", data.model);
+      console.log("📊 Tokens:", data.usage?.total_tokens);
+      console.log("💰 Custo:", data.usage?.cost);
 
       return {
         originalStory: story,
