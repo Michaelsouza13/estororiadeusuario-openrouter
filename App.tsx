@@ -104,15 +104,22 @@ const App: React.FC = () => {
   
   const showToast = (msg: string) => setToast(msg);
   
-  const playBeep = () => {
+  const playNotification = () => {
     try {
       const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
-      const osc = ctx.createOscillator();
-      osc.type = 'sine';
-      osc.frequency.value = 800;
-      osc.connect(ctx.destination);
-      osc.start();
-      osc.stop(ctx.currentTime + 0.3);
+      const t = ctx.currentTime;
+      [660, 880].forEach((freq, i) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.value = freq;
+        gain.gain.setValueAtTime(0.3, t + i * 0.12);
+        gain.gain.exponentialRampToValueAtTime(0.01, t + i * 0.12 + 0.2);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(t + i * 0.12);
+        osc.stop(t + i * 0.12 + 0.2);
+      });
     } catch {}
   };
   
@@ -378,7 +385,7 @@ const App: React.FC = () => {
       setStatus(AnalysisStatus.SUCCESS);
       const msg = `Auditoria concluida! ${rowsToProcess.length} historias processadas.`;
       showToast(msg);
-      playBeep();
+      playNotification();
       if ('Notification' in window && Notification.permission === 'granted') {
         new Notification('StoryAnalyst AI', { body: msg });
       }
