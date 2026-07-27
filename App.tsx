@@ -1,6 +1,6 @@
 
 import React, { useState, useRef, useEffect } from 'react';
-import { analyzeStory, lastAIUsage } from './services/aiService';
+import { analyzeStory } from './services/aiService';
 import { parseFile } from './utils/fileParser';
 import { AnalysisResult, AnalysisStatus } from './types';
 import { 
@@ -87,7 +87,10 @@ const App: React.FC = () => {
     return saved !== null ? JSON.parse(saved) : true;
   });
   const [isConfigOpen, setIsConfigOpen] = useState(false);
-  const [usageDisplay, setUsageDisplay] = useState<{ model: string; tokens?: number; cost?: number } | null>(null);
+  const [usageDisplay, setUsageDisplay] = useState<{ model: string; tokens?: number; cost?: number } | null>(() => {
+    const saved = localStorage.getItem('storyanalyst_last_usage');
+    return saved ? JSON.parse(saved) : null;
+  });
   
   const dropdownRef = useRef<HTMLDivElement>(null);
   const configRef = useRef<HTMLDivElement>(null);
@@ -188,7 +191,9 @@ const App: React.FC = () => {
     setResults([]); 
     try {
       const result = await analyzeStory(inputText, useFreeModel);
-      setUsageDisplay(lastAIUsage);
+      const usage = { model: result.model || '', tokens: result.tokens, cost: result.cost };
+      localStorage.setItem('storyanalyst_last_usage', JSON.stringify(usage));
+      setUsageDisplay(usage);
       const fullResult: AnalysisResult = {
         ...result,
         date: new Date().toLocaleDateString('pt-BR'),
@@ -307,7 +312,9 @@ const App: React.FC = () => {
       for (let i = 0; i < rowsToProcess.length; i += batchSize) {
         const batch = rowsToProcess.slice(i, i + batchSize);
         const batchResults = await Promise.all(batch.map(row => analyzeStory(row.story, useFreeModel).then(res => {
-              setUsageDisplay(lastAIUsage);
+              const usage = { model: res.model || '', tokens: res.tokens, cost: res.cost };
+              localStorage.setItem('storyanalyst_last_usage', JSON.stringify(usage));
+              setUsageDisplay(usage);
               return res;
             }).then(res => ({
             ...res,

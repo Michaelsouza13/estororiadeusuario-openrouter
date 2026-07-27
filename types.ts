@@ -18,6 +18,9 @@ export interface AnalysisResult {
   isDuplicate?: boolean; // Flag para identificar se veio do histórico
   isReference?: boolean; // Flag para identificar se é um exemplo de ouro (Golden Sample)
   uncertaintyNote?: string; // Mensagem da IA caso tenha dúvida sobre algum termo ou contexto
+  model?: string; // Modelo de IA usado na análise
+  tokens?: number; // Total de tokens consumidos
+  cost?: number; // Custo em dólares da consulta
 }
 
 export enum AnalysisStatus {

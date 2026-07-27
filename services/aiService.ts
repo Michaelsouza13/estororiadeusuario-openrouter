@@ -4,8 +4,6 @@ import { getRandomReferences } from "../utils/storage";
 
 const OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions";
 
-export let lastAIUsage: { model: string; tokens?: number; cost?: number } | null = null;
-
 const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 const cleanStoryText = (text: string): string => {
@@ -135,11 +133,6 @@ export const analyzeStory = async (story: string, useFree: boolean = true): Prom
 
       const result = JSON.parse(content);
 
-      lastAIUsage = {
-        model: data.model,
-        tokens: data.usage?.total_tokens,
-        cost: data.usage?.cost
-      };
       console.log("🤖 Modelo:", data.model);
       console.log("📊 Tokens:", data.usage?.total_tokens);
       console.log("💰 Custo:", data.usage?.cost);
@@ -147,7 +140,10 @@ export const analyzeStory = async (story: string, useFree: boolean = true): Prom
       return {
         originalStory: story,
         ...result,
-        isReference: false
+        isReference: false,
+        model: data.model,
+        tokens: data.usage?.total_tokens,
+        cost: data.usage?.cost
       };
 
     } catch (error: any) {
