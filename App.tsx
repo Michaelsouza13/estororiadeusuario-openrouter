@@ -18,10 +18,11 @@ import AnalysisCard from './components/AnalysisCard';
 import Dashboard from './components/Dashboard';
 import HistoryView from './components/HistoryView';
 import KnowledgeBase from './components/KnowledgeBase';
+import GlossaryView from './components/GlossaryView';
 import { 
   BookOpen, Upload, Play, Loader2, Download, AlertCircle, 
   FileText, History, User, Shuffle, UserCheck, Search, 
-  Plus, Pencil, Trash2, X, Check, ChevronDown, Edit2, Star, Settings, Cpu, DollarSign 
+  Plus, Pencil, Trash2, X, Check, ChevronDown, Edit2, Star, Settings, Cpu, DollarSign, BookMarked 
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 
@@ -69,7 +70,7 @@ const INITIAL_OWNERS = [
 const STORAGE_KEY_OWNERS = 'storyanalyst_owners_list';
 
 const App: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'single' | 'bulk' | 'history' | 'knowledge'>('single');
+  const [activeTab, setActiveTab] = useState<'single' | 'bulk' | 'history' | 'knowledge' | 'glossary'>('single');
   const [inputText, setInputText] = useState('');
   const [defaultOwner, setDefaultOwner] = useState('');
   const [agilistas, setAgilistas] = useState<string[]>([]);
@@ -455,14 +456,14 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 pb-20">
+    <div className="min-h-screen bg-[#f8f7f5] text-[#191919] pb-20">
       <header className="bg-white border-b border-gray-200 sticky top-0 z-10">
         <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="bg-blue-600 p-2 rounded-lg text-white shadow-lg shadow-blue-100">
+            <div className="bg-[#ff5500] p-2 rounded-lg text-white shadow-lg shadow-[#ff5500]/30">
               <BookOpen size={20} />
             </div>
-            <h1 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-700 to-blue-500">
+            <h1 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-[#ff5500] to-[#e29494]">
               StoryAnalyst AI
             </h1>
             <div className="relative ml-3" ref={configRef}>
@@ -486,26 +487,26 @@ const App: React.FC = () => {
                         <Cpu size={12} /> Modelo de IA
                       </p>
                       <div className="space-y-2">
-                        <label className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all ${useFreeModel ? 'bg-blue-50 border-2 border-blue-200' : 'bg-slate-50 border-2 border-transparent'}`}>
+                        <label className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all ${useFreeModel ? 'bg-[#fff5f0] border-2 border-[#ff5500]/20' : 'bg-slate-50 border-2 border-transparent'}`}>
                           <input
                             type="radio"
                             name="model"
                             checked={useFreeModel}
                             onChange={() => setUseFreeModel(true)}
-                            className="accent-blue-600"
+                            className="accent-[#ff5500]"
                           />
                           <div>
                             <p className="text-xs font-bold text-slate-700">Free</p>
                             <p className="text-[10px] text-slate-400">sem custo, 50 req/dia</p>
                           </div>
                         </label>
-                        <label className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all ${!useFreeModel ? 'bg-blue-50 border-2 border-blue-200' : 'bg-slate-50 border-2 border-transparent'}`}>
+                        <label className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all ${!useFreeModel ? 'bg-[#fff5f0] border-2 border-[#ff5500]/20' : 'bg-slate-50 border-2 border-transparent'}`}>
                           <input
                             type="radio"
                             name="model"
                             checked={!useFreeModel}
                             onChange={() => setUseFreeModel(false)}
-                            className="accent-blue-600"
+                            className="accent-[#ff5500]"
                           />
                           <div>
                             <p className="text-xs font-bold text-slate-700">DeepSeek V3 + Llama 70B</p>
@@ -534,15 +535,16 @@ const App: React.FC = () => {
             </div>
           </div>
           <div className="flex bg-gray-100 p-1 rounded-lg">
-            {['single', 'bulk', 'history', 'knowledge'].map((tab) => (
+            {(['single', 'bulk', 'history', 'knowledge', 'glossary'] as const).map((tab) => (
               <button
                 key={tab}
-                onClick={() => { setActiveTab(tab as any); if (tab !== 'history' && tab !== 'knowledge' && status !== AnalysisStatus.LOADING) setResults([]); }}
-                className={`px-4 py-1.5 text-sm font-medium rounded-md transition-all flex items-center gap-2 ${activeTab === tab ? 'bg-white shadow-sm text-blue-700' : 'text-gray-500 hover:text-gray-700'}`}
+                onClick={() => { setActiveTab(tab); if (tab !== 'history' && tab !== 'knowledge' && tab !== 'glossary' && status !== AnalysisStatus.LOADING) setResults([]); }}
+                className={`px-3 py-1.5 text-sm font-medium rounded-md transition-all flex items-center gap-1.5 ${activeTab === tab ? 'bg-white shadow-sm text-[#ff5500]' : 'text-gray-500 hover:text-gray-700'}`}
               >
-                {tab === 'history' && <History size={16} />}
-                {tab === 'knowledge' && <Star size={16} />}
-                {tab === 'single' ? 'Entrada Única' : tab === 'bulk' ? 'Upload em Lote' : tab === 'history' ? 'Histórico' : 'Base de Conhecimento'}
+                {tab === 'history' && <History size={15} />}
+                {tab === 'knowledge' && <Star size={15} />}
+                {tab === 'glossary' && <BookMarked size={15} />}
+                {tab === 'single' ? 'Única' : tab === 'bulk' ? 'Lote' : tab === 'history' ? 'Histórico' : tab === 'knowledge' ? 'Base' : 'Glossário'}
               </button>
             ))}
           </div>
@@ -552,41 +554,41 @@ const App: React.FC = () => {
       <main className="max-w-6xl mx-auto px-4 mt-8">
         
         {/* TOPO: Título e Seletor de Agilista (Oculto em Knowledge Base) */}
-        {activeTab !== 'history' && activeTab !== 'knowledge' && (
+        {activeTab !== 'history' && activeTab !== 'knowledge' && activeTab !== 'glossary' && (
           <section className="mb-8 flex flex-col md:flex-row items-center justify-between gap-6">
             <div className="text-left flex-1">
-              <h2 className="text-3xl font-extrabold text-slate-800 mb-2 tracking-tight">Auditoria de Requisitos</h2>
-              <p className="text-slate-500 max-w-lg font-medium leading-relaxed">
+              <h2 className="text-3xl font-extrabold text-[#191919] mb-2 tracking-tight">Auditoria de Requisitos</h2>
+              <p className="text-[#292929] max-w-lg font-medium leading-relaxed">
                 Refine seu backlog com inteligência baseada na metodologia Marcos Inácio.
               </p>
               <div className="mt-3 flex items-center gap-2">
-                <span className="text-[10px] uppercase font-bold tracking-widest bg-blue-600 text-white px-2 py-0.5 rounded shadow-sm">
+                <span className="text-[10px] uppercase font-bold tracking-widest bg-[#ff5500] text-white px-2 py-0.5 rounded shadow-sm">
                   {getCurrentQuarter()}
                 </span>
-                <span className="text-[10px] uppercase font-bold tracking-widest bg-slate-200 text-slate-600 px-2 py-0.5 rounded">
+                <span className="text-[10px] uppercase font-bold tracking-widest bg-[#292929]/10 text-[#292929] px-2 py-0.5 rounded">
                   MARCOS INÁCIO ADVOGADOS
                 </span>
               </div>
             </div>
 
             <div className="w-full md:w-auto relative" ref={dropdownRef}>
-              <div className="bg-white p-4 rounded-2xl border border-gray-200 shadow-xl shadow-blue-500/5 flex flex-col gap-2 min-w-[320px]">
+              <div className="bg-white p-4 rounded-2xl border border-gray-200 shadow-xl shadow-[#ff5500]/5 flex flex-col gap-2 min-w-[320px]">
                 <div className="flex items-center justify-between mb-1">
-                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Agilista Responsável</label>
+                   <label className="text-[10px] font-black text-[#292929]/60 uppercase tracking-widest">Agilista Responsável</label>
                    {defaultOwner && <div className="flex items-center gap-1 text-[10px] font-bold text-green-600 uppercase animate-pulse"><UserCheck size={10}/> Conectado</div>}
                 </div>
                 
                 <button 
                   onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                  className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl transition-all hover:border-blue-300 group"
+                  className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl transition-all hover:border-[#ff5500] group"
                 >
                   <div className="flex items-center gap-3">
-                    <User size={18} className={defaultOwner ? "text-blue-500" : "text-slate-400"} />
-                    <span className={`font-bold ${defaultOwner ? "text-slate-700" : "text-slate-400"}`}>
+                    <User size={18} className={defaultOwner ? "text-[#ff5500]" : "text-[#292929]/40"} />
+                    <span className={`font-bold ${defaultOwner ? "text-[#191919]" : "text-[#292929]/40"}`}>
                       {defaultOwner || "Selecione seu nome..."}
                     </span>
                   </div>
-                  <ChevronDown size={18} className={`text-slate-400 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} />
+                  <ChevronDown size={18} className={`text-[#292929]/40 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} />
                 </button>
 
                 {isDropdownOpen && (
@@ -608,25 +610,25 @@ const App: React.FC = () => {
                         <div 
                           key={name}
                           onClick={() => { if (editingOwnerIndex === null) { setDefaultOwner(name); setIsDropdownOpen(false); } }}
-                          className={`flex items-center justify-between px-4 py-2.5 hover:bg-blue-50 cursor-pointer group/item ${defaultOwner === name ? 'bg-blue-50/50' : ''}`}
+                          className={`flex items-center justify-between px-4 py-2.5 hover:bg-[#fff5f0] cursor-pointer group/item ${defaultOwner === name ? 'bg-[#fff5f0]' : ''}`}
                         >
                           {editingOwnerIndex === idx ? (
                             <div className="flex items-center gap-2 flex-1" onClick={e => e.stopPropagation()}>
                                <input 
-                                 className="flex-1 bg-white border border-blue-300 rounded px-2 py-1 text-xs font-bold outline-none"
-                                 value={editingValue}
-                                 onChange={e => setEditingValue(e.target.value)}
-                                 autoFocus
-                               />
+                                  className="flex-1 bg-white border border-[#ff5500]/30 rounded px-2 py-1 text-xs font-bold outline-none focus:border-[#ff5500]"
+                                  value={editingValue}
+                                  onChange={e => setEditingValue(e.target.value)}
+                                  autoFocus
+                                />
                                <button onClick={e => handleSaveEdit(e, name)} className="text-green-600 p-1"><Check size={14}/></button>
                                <button onClick={e => { e.stopPropagation(); setEditingOwnerIndex(null); }} className="text-slate-400 p-1"><X size={14}/></button>
                             </div>
                           ) : (
                             <>
-                              <span className={`text-xs font-bold ${defaultOwner === name ? 'text-blue-600' : 'text-slate-600'}`}>{name}</span>
+                              <span className={`text-xs font-bold ${defaultOwner === name ? 'text-[#ff5500]' : 'text-[#191919]'}`}>{name}</span>
                               <div className="flex items-center gap-1 opacity-0 group-hover/item:opacity-100 transition-opacity">
-                                <button onClick={e => handleStartEdit(e, idx, name)} className="p-1.5 text-slate-400 hover:text-blue-500 hover:bg-blue-100 rounded-lg transition-all"><Pencil size={12}/></button>
-                                <button onClick={e => handleDeleteOwner(e, name)} className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-100 rounded-lg transition-all"><Trash2 size={12}/></button>
+                                <button onClick={e => handleStartEdit(e, idx, name)} className="p-1.5 text-[#292929]/40 hover:text-[#ff5500] hover:bg-[#fff5f0] rounded-lg transition-all"><Pencil size={12}/></button>
+                                <button onClick={e => handleDeleteOwner(e, name)} className="p-1.5 text-[#292929]/40 hover:text-red-500 hover:bg-red-100 rounded-lg transition-all"><Trash2 size={12}/></button>
                               </div>
                             </>
                           )}
@@ -640,14 +642,14 @@ const App: React.FC = () => {
                     <div className="p-3 border-t border-slate-100 bg-slate-50/50 flex items-center gap-2">
                       <input 
                         placeholder="Novo Agilista..."
-                        className="flex-1 bg-white border border-slate-200 rounded-lg px-3 py-2 text-[10px] font-black uppercase outline-none focus:border-blue-400 transition-all"
+                        className="flex-1 bg-white border border-slate-200 rounded-lg px-3 py-2 text-[10px] font-black uppercase outline-none focus:border-[#ff5500] transition-all"
                         value={newOwnerValue}
                         onChange={e => setNewOwnerValue(e.target.value)}
                         onKeyDown={e => e.key === 'Enter' && handleAddOwner()}
                       />
                       <button 
                         onClick={handleAddOwner}
-                        className="bg-blue-600 text-white p-2 rounded-lg hover:bg-blue-700 transition-all shadow-lg shadow-blue-200 active:scale-90"
+                        className="bg-[#ff5500] text-white p-2 rounded-lg hover:bg-[#e64a00] transition-all shadow-lg shadow-[#ff5500]/20 active:scale-90"
                       >
                         <Plus size={14} />
                       </button>
@@ -662,34 +664,34 @@ const App: React.FC = () => {
         {/* ÁREA DE CONTEÚDO PRINCIPAL (INPUTS) */}
         {activeTab === 'single' && (
           <section className="animate-in fade-in duration-500 max-w-3xl mx-auto">
-             <div className="bg-white p-6 rounded-3xl shadow-xl border border-blue-100 mb-8 relative overflow-hidden group">
-               <div className="absolute top-0 left-0 w-2 h-full bg-blue-600"></div>
-               <h3 className="text-lg font-black text-slate-800 mb-4 flex items-center gap-2 uppercase tracking-wide">
-                 <Edit2 size={20} className="text-blue-500" /> Analisador de Estória
-               </h3>
-               <textarea 
-                 className="w-full h-40 p-5 rounded-2xl bg-slate-50 border-2 border-slate-100 focus:border-blue-400 focus:bg-white outline-none transition-all resize-none text-slate-700 font-medium text-lg placeholder-slate-400 leading-relaxed shadow-inner"
-                 placeholder="Cole aqui sua estória de usuário (ex: Como usuário, quero...)"
-                 value={inputText}
-                 onChange={(e) => setInputText(e.target.value)}
-               />
-               <div className="mt-4 flex justify-end">
-                 <button 
-                   onClick={handleSingleAnalysis} 
-                   disabled={status === AnalysisStatus.LOADING || !inputText.trim()}
-                   className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-2xl font-black text-xs uppercase tracking-[0.15em] flex items-center gap-3 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-blue-200 active:scale-95 group-hover:shadow-blue-300"
-                 >
-                   {status === AnalysisStatus.LOADING ? <Loader2 className="animate-spin" size={20} /> : <Play size={20} fill="currentColor" />}
-                   {status === AnalysisStatus.LOADING ? 'Analisando...' : 'Executar Auditoria'}
-                 </button>
-               </div>
+             <div className="bg-white p-6 rounded-3xl shadow-xl border border-[#ff5500]/10 mb-8 relative overflow-hidden group">
+                <div className="absolute top-0 left-0 w-2 h-full bg-[#ff5500]"></div>
+                <h3 className="text-lg font-black text-[#191919] mb-4 flex items-center gap-2 uppercase tracking-wide">
+                  <Edit2 size={20} className="text-[#ff5500]" /> Analisador de Estória
+                </h3>
+                <textarea 
+                  className="w-full h-40 p-5 rounded-2xl bg-slate-50 border-2 border-slate-100 focus:border-[#ff5500] focus:bg-white outline-none transition-all resize-none text-[#191919] font-medium text-lg placeholder-slate-400 leading-relaxed shadow-inner"
+                  placeholder="Cole aqui sua estória de usuário (ex: Como usuário, quero...)"
+                  value={inputText}
+                  onChange={(e) => setInputText(e.target.value)}
+                />
+                <div className="mt-4 flex justify-end">
+                  <button 
+                    onClick={handleSingleAnalysis} 
+                    disabled={status === AnalysisStatus.LOADING || !inputText.trim()}
+                    className="bg-[#ff5500] hover:bg-[#e64a00] text-white px-8 py-4 rounded-2xl font-black text-xs uppercase tracking-[0.15em] flex items-center gap-3 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-[#ff5500]/20 active:scale-95 group-hover:shadow-[#ff5500]/30"
+                  >
+                    {status === AnalysisStatus.LOADING ? <Loader2 className="animate-spin" size={20} /> : <Play size={20} fill="currentColor" />}
+                    {status === AnalysisStatus.LOADING ? 'Analisando...' : 'Executar Auditoria'}
+                  </button>
+                </div>
              </div>
           </section>
         )}
 
         {activeTab === 'bulk' && (
           <section className="animate-in fade-in duration-500 max-w-4xl mx-auto">
-            <div className="bg-white p-20 rounded-[40px] shadow-2xl border-4 border-dashed border-slate-100 text-center hover:border-blue-300 hover:bg-slate-50 transition-all group cursor-pointer relative mb-12" onClick={() => fileInputRef.current?.click()}>
+            <div className="bg-white p-20 rounded-[40px] shadow-2xl border-4 border-dashed border-slate-100 text-center hover:border-[#ff5500]/30 hover:bg-[#fff5f0]/30 transition-all group cursor-pointer relative mb-12" onClick={() => fileInputRef.current?.click()}>
               <input 
                 type="file" 
                 ref={fileInputRef} 
@@ -697,15 +699,15 @@ const App: React.FC = () => {
                 accept=".xlsx" 
                 className="hidden" 
               />
-              <div className="bg-white w-24 h-24 rounded-3xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform shadow-xl shadow-blue-500/10 border border-slate-100">
-                <Upload size={40} className="text-blue-600" />
+              <div className="bg-white w-24 h-24 rounded-3xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform shadow-xl shadow-[#ff5500]/10 border border-slate-100">
+                <Upload size={40} className="text-[#ff5500]" />
               </div>
-              <h3 className="text-3xl font-black text-slate-800 mb-4 tracking-tight">Importação em Lote</h3>
-              <p className="text-slate-400 font-medium max-w-md mx-auto leading-relaxed mb-6 text-sm">
+              <h3 className="text-3xl font-black text-[#191919] mb-4 tracking-tight">Importação em Lote</h3>
+              <p className="text-[#292929]/50 font-medium max-w-md mx-auto leading-relaxed mb-6 text-sm">
                 Auditoria automática de {samplingRate}% das estórias da sua planilha <br/> (Colunas D e G).
               </p>
               
-              <button className="bg-white border-2 border-slate-200 text-slate-600 px-10 py-4 rounded-2xl font-black text-xs uppercase tracking-[0.2em] hover:border-blue-500 hover:text-blue-600 transition-all shadow-sm group-hover:shadow-lg mb-8">
+              <button className="bg-white border-2 border-slate-200 text-[#292929] px-10 py-4 rounded-2xl font-black text-xs uppercase tracking-[0.2em] hover:border-[#ff5500] hover:text-[#ff5500] transition-all shadow-sm group-hover:shadow-lg mb-8">
                   Selecionar Planilha
               </button>
 
@@ -716,8 +718,8 @@ const App: React.FC = () => {
                {/* Slider de Configuração da Amostragem */}
                <div className="flex flex-col items-center justify-center mt-4 p-4 bg-slate-50 rounded-2xl border border-slate-100 max-w-md mx-auto" onClick={(e) => e.stopPropagation()}>
                   <div className="flex items-center justify-between w-full mb-2 px-2">
-                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1"><Settings size={12}/> Configurar Taxa</span>
-                    <span className="text-sm font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-md border border-blue-100">{samplingRate}%</span>
+                    <span className="text-[10px] font-black text-[#292929]/60 uppercase tracking-widest flex items-center gap-1"><Settings size={12}/> Configurar Taxa</span>
+                    <span className="text-sm font-bold text-[#ff5500] bg-[#fff5f0] px-2 py-0.5 rounded-md border border-[#ff5500]/10">{samplingRate}%</span>
                   </div>
                   <input 
                     type="range" 
@@ -726,7 +728,7 @@ const App: React.FC = () => {
                     step="10" 
                     value={samplingRate} 
                     onChange={(e) => setSamplingRate(Number(e.target.value))}
-                    className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
+                    className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-[#ff5500]"
                   />
                   <div className="flex justify-between w-full text-[9px] text-slate-300 font-bold mt-1 px-1">
                     <span>10%</span>
@@ -737,22 +739,22 @@ const App: React.FC = () => {
 
             {status === AnalysisStatus.LOADING && (
                <div className="max-w-xl mx-auto mb-12">
-                 <div className="flex justify-between text-xs font-black uppercase text-slate-500 mb-2 tracking-widest">
-                    <span className="flex items-center gap-2">
-                      {bulkProgress.totalBatches > 0 && (
-                        <span className="bg-blue-100 text-blue-700 px-2 py-0.5 rounded text-[10px]">
-                          Lote {bulkProgress.batchIndex}/{bulkProgress.totalBatches}
-                        </span>
-                      )}
-                      Processando...
-                    </span>
-                    <span>{Math.round((bulkProgress.current / bulkProgress.total) * 100)}%</span>
-                 </div>
-                 <div className="h-4 bg-slate-100 rounded-full overflow-hidden border border-slate-200">
-                   <div 
-                     className="h-full bg-gradient-to-r from-blue-500 to-indigo-600 transition-all duration-500 ease-out shadow-[0_0_15px_rgba(59,130,246,0.5)]" 
-                     style={{ width: `${(bulkProgress.current / bulkProgress.total) * 100}%` }}
-                   ></div>
+                  <div className="flex justify-between text-xs font-black uppercase text-slate-500 mb-2 tracking-widest">
+                     <span className="flex items-center gap-2">
+                       {bulkProgress.totalBatches > 0 && (
+                         <span className="bg-[#fff5f0] text-[#ff5500] px-2 py-0.5 rounded text-[10px]">
+                           Lote {bulkProgress.batchIndex}/{bulkProgress.totalBatches}
+                         </span>
+                       )}
+                       Processando...
+                     </span>
+                     <span>{Math.round((bulkProgress.current / bulkProgress.total) * 100)}%</span>
+                  </div>
+                  <div className="h-4 bg-slate-100 rounded-full overflow-hidden border border-slate-200">
+                    <div 
+                      className="h-full bg-gradient-to-r from-[#ff5500] to-[#ff7733] transition-all duration-500 ease-out shadow-[0_0_15px_rgba(255,85,0,0.5)]" 
+                      style={{ width: `${(bulkProgress.current / bulkProgress.total) * 100}%` }}
+                    ></div>
                  </div>
                  <div className="flex items-center justify-between mt-3">
                    <p className="text-center text-xs text-slate-400 font-medium">
@@ -790,11 +792,15 @@ const App: React.FC = () => {
            <KnowledgeBase />
         )}
 
-        {results.length > 0 && activeTab !== 'history' && activeTab !== 'knowledge' && (
+        {activeTab === 'glossary' && (
+           <GlossaryView />
+        )}
+
+        {results.length > 0 && activeTab !== 'history' && activeTab !== 'knowledge' && activeTab !== 'glossary' && (
           <section className="animate-in fade-in slide-in-from-bottom-8 duration-700">
              <div className="flex items-center justify-between mb-8 flex-wrap gap-4">
-               <h3 className="text-3xl font-black text-slate-800 flex items-center gap-4 tracking-tighter">
-                 <FileText className="text-blue-600" size={32} /> Relatório de Auditoria
+               <h3 className="text-3xl font-black text-[#191919] flex items-center gap-4 tracking-tighter">
+                 <FileText className="text-[#ff5500]" size={32} /> Relatório de Auditoria
                </h3>
                <button onClick={handleExportCurrent} className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-8 py-4 rounded-2xl text-xs font-black uppercase tracking-widest transition-all shadow-xl shadow-emerald-100 active:scale-95">
                  <Download size={20} /> Exportar XLSX
@@ -810,7 +816,7 @@ const App: React.FC = () => {
         )}
         
         {status === AnalysisStatus.ERROR && (
-           <div className="max-w-4xl mx-auto p-8 bg-red-50 text-red-700 border-2 border-red-100 rounded-3xl flex items-center gap-6 animate-bounce">
+           <div className="max-w-4xl mx-auto p-8 bg-red-50 text-red-700 border-2 border-red-100 rounded-3xl flex items-center gap-6 animate-in fade-in">
              <div className="bg-red-100 p-4 rounded-2xl text-red-600"><AlertCircle size={32} /></div>
              <div>
                 <h4 className="font-black uppercase text-sm mb-1">Erro no Processamento</h4>

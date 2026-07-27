@@ -42,3 +42,11 @@ export interface FileRow {
   story: string;
   owner: string;
 }
+
+export interface GlossaryEntry {
+  term: string;
+  meaning: string;
+  source: 'auto' | 'manual';
+  createdAt: string;
+  createdBy?: string;
+}

@@ -1,6 +1,6 @@
 
-import { AnalysisResult } from "../types";
-import { getRandomReferences } from "../utils/storage";
+import { AnalysisResult, GlossaryEntry } from "../types";
+import { getRandomReferences, fetchGlossary } from "../utils/storage";
 
 const OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions";
 
@@ -33,7 +33,16 @@ const parseJSON = (text: string): any => {
   throw new Error(`Resposta da IA invalida: ${text.slice(0, 200)}`);
 };
 
-const buildSystemPrompt = (referenceExamples: AnalysisResult[]): string => {
+const buildGlossaryContext = (glossary: GlossaryEntry[]): string => {
+  if (!glossary || glossary.length === 0) return "";
+  return `
+    ### GLOSSÁRIO DE TERMOS ###
+    Use estas definições para interpretar corretamente os termos a seguir:
+    ${glossary.map(g => `"${g.term}" = ${g.meaning}`).join('\n')}
+  `;
+};
+
+const buildSystemPrompt = (referenceExamples: AnalysisResult[], glossary: GlossaryEntry[] = []): string => {
   let examplesContext = "";
   if (referenceExamples.length > 0) {
     examplesContext = `
@@ -56,6 +65,7 @@ const buildSystemPrompt = (referenceExamples: AnalysisResult[]): string => {
   return `
     Atue como um Especialista em Engenharia de Requisitos (Product Owner Sênior) auditando backlog com a metodologia Marcos Inácio.
     
+    ${buildGlossaryContext(glossary)}
     ${examplesContext}
 
     ### INSTRUÇÃO CRÍTICA SOBRE RUÍDO DE SISTEMA ###
@@ -112,8 +122,11 @@ export const analyzeStory = async (story: string, useFree: boolean = true): Prom
     ? ["openrouter/free"]
     : ["deepseek/deepseek-chat", "meta-llama/llama-3.1-70b-instruct"];
 
-  const referenceExamples = await getRandomReferences(3);
-  const systemPrompt = buildSystemPrompt(referenceExamples);
+  const [referenceExamples, glossaryEntries] = await Promise.all([
+    getRandomReferences(3),
+    fetchGlossary()
+  ]);
+  const systemPrompt = buildSystemPrompt(referenceExamples, glossaryEntries);
 
   let attempt = 0;
   const maxAttempts = 5;
@@ -187,7 +200,7 @@ export const analyzeStory = async (story: string, useFree: boolean = true): Prom
   throw new Error("Falha na análise após várias tentativas.");
 };
 
-const buildBatchSystemPrompt = (referenceExamples: AnalysisResult[]): string => {
+const buildBatchSystemPrompt = (referenceExamples: AnalysisResult[], glossary: GlossaryEntry[] = []): string => {
   let examplesContext = "";
   if (referenceExamples.length > 0) {
     examplesContext = `
@@ -210,6 +223,7 @@ const buildBatchSystemPrompt = (referenceExamples: AnalysisResult[]): string => 
   return `
     Atue como um Especialista em Engenharia de Requisitos (Product Owner Sênior) auditando backlog com a metodologia Marcos Inácio.
     
+    ${buildGlossaryContext(glossary)}
     ${examplesContext}
 
     ### INSTRUÇÃO CRÍTICA SOBRE RUÍDO DE SISTEMA ###
@@ -400,13 +414,14 @@ const processChunk = async (
   chunk: string[],
   useFree: boolean,
   referenceExamples: AnalysisResult[],
+  glossary: GlossaryEntry[] = [],
   signal?: AbortSignal
 ): Promise<AnalysisResult[]> => {
   const models = useFree
     ? ["openrouter/free"]
     : ["deepseek/deepseek-chat", "meta-llama/llama-3.1-70b-instruct"];
 
-  const batchPrompt = buildBatchSystemPrompt(referenceExamples);
+  const batchPrompt = buildBatchSystemPrompt(referenceExamples, glossary);
   const userContent = chunk.map((s, i) => `[${i}] ${s}`).join('\n\n');
 
   let response = await makeRequest(models, batchPrompt, userContent, useFree, signal).catch(() => null);
@@ -444,7 +459,7 @@ const processChunk = async (
   for (const idx of missingIdx) {
     if (recovered[idx]) continue;
     try {
-      const singlePrompt = buildSystemPrompt(referenceExamples);
+      const singlePrompt = buildSystemPrompt(referenceExamples, glossary);
       const singleResponse = await makeRequest(models, singlePrompt, chunk[idx], useFree, signal);
       const singleParsed = parseJSON(singleResponse.content);
       recovered[idx] = mapItemsToResults([{ ...singleParsed, storyIndex: 0 }], [chunk[idx]], singleResponse.model, singleResponse.tokens, singleResponse.cost)[0];
@@ -467,7 +482,10 @@ export const analyzeStoriesBatch = async (
   if (stories.length === 0) return [];
 
   const cleanedStories = stories.map(cleanStoryText);
-  const referenceExamples = await getRandomReferences(3);
+  const [referenceExamples, glossaryEntries] = await Promise.all([
+    getRandomReferences(3),
+    fetchGlossary()
+  ]);
   const allResults: AnalysisResult[] = [];
   const totalBatches = Math.ceil(cleanedStories.length / batchSize);
   let lastModel = '';
@@ -478,7 +496,7 @@ export const analyzeStoriesBatch = async (
     if (signal?.aborted) throw new DOMException('Aborted', 'AbortError');
 
     const chunk = cleanedStories.slice(i, i + batchSize);
-    const batchResults = await processChunk(chunk, useFree, referenceExamples, signal);
+    const batchResults = await processChunk(chunk, useFree, referenceExamples, glossaryEntries, signal);
 
     if (batchResults.length > 0 && batchResults[0].model) {
       lastModel = batchResults[0].model;

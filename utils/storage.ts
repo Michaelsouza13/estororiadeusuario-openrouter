@@ -1,10 +1,11 @@
 
-import { AnalysisResult } from "../types";
+import { AnalysisResult, GlossaryEntry } from "../types";
 import { db } from "../services/firebase";
 import { collection, getDocs, setDoc, doc, deleteDoc, query, orderBy, writeBatch, limit, where } from "firebase/firestore";
 
 const COLLECTION_HISTORY = "analysis_history";
 const COLLECTION_REFERENCES = "reference_stories";
+const COLLECTION_GLOSSARY = "context_glossary";
 
 export const getCurrentQuarter = (): string => {
   const date = new Date();
@@ -154,6 +155,52 @@ export const removeReferenceStory = async (id: string) => {
     throw error;
   }
 };
+
+// --- Glossary Functions ---
+
+export const fetchGlossary = async (): Promise<GlossaryEntry[]> => {
+  try {
+    const q = query(collection(db, COLLECTION_GLOSSARY));
+    const querySnapshot = await getDocs(q);
+    const entries: GlossaryEntry[] = [];
+    querySnapshot.forEach((doc) => {
+      entries.push(doc.data() as GlossaryEntry);
+    });
+    return entries.sort((a, b) => a.term.localeCompare(b.term));
+  } catch (error) {
+    console.error("Erro ao buscar glossário:", error);
+    return [];
+  }
+};
+
+export const fetchGlossaryMap = async (): Promise<Map<string, string>> => {
+  const entries = await fetchGlossary();
+  const map = new Map<string, string>();
+  entries.forEach(e => map.set(e.term.toLowerCase(), e.meaning));
+  return map;
+};
+
+export const saveGlossaryTerm = async (entry: GlossaryEntry) => {
+  try {
+    const docRef = doc(db, COLLECTION_GLOSSARY, entry.term);
+    await setDoc(docRef, sanitizeForFirestore(entry));
+  } catch (error) {
+    console.error("Erro ao salvar termo no glossário:", error);
+    throw error;
+  }
+};
+
+export const deleteGlossaryTerm = async (term: string) => {
+  try {
+    const docRef = doc(db, COLLECTION_GLOSSARY, term);
+    await deleteDoc(docRef);
+  } catch (error) {
+    console.error("Erro ao deletar termo do glossário:", error);
+    throw error;
+  }
+};
+
+// --- Reference / Knowledge Base Functions ---
 
 /**
  * Obtém exemplos aleatórios da base de conhecimento para ensinar a IA (Few-Shot Learning).

@@ -29,15 +29,15 @@ const Dashboard: React.FC<DashboardProps> = ({ results }) => {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
       {/* Summary Card */}
-      <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 flex flex-col justify-center items-center">
-        <h3 className="text-gray-500 font-medium mb-2">Média Geral</h3>
-        <div className="text-5xl font-bold text-gray-800">{avgScore.toFixed(1)}</div>
-        <div className="text-sm text-gray-400 mt-2">Em {total} histórias (Max 9)</div>
+      <div className="bg-white p-6 rounded-[32px] shadow-xl border border-gray-100 flex flex-col justify-center items-center">
+        <h3 className="text-[#292929] font-medium mb-2">Média Geral</h3>
+        <div className="text-5xl font-bold text-[#191919]">{avgScore.toFixed(1)}</div>
+        <div className="text-sm text-[#292929]/50 mt-2">Em {total} histórias (Max 9)</div>
       </div>
 
       {/* Distribution Chart */}
-      <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-        <h3 className="text-gray-700 font-semibold mb-4 text-sm uppercase tracking-wide">Distribuição de Qualidade</h3>
+      <div className="bg-white p-6 rounded-[32px] shadow-xl border border-gray-100">
+        <h3 className="text-[#191919] font-semibold mb-4 text-sm uppercase tracking-wide">Distribuição de Qualidade</h3>
         <div className="h-40">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
@@ -69,15 +69,15 @@ const Dashboard: React.FC<DashboardProps> = ({ results }) => {
       </div>
 
       {/* Weakness Analysis */}
-      <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-        <h3 className="text-gray-700 font-semibold mb-4 text-sm uppercase tracking-wide">Desempenho por Critério (Média)</h3>
+      <div className="bg-white p-6 rounded-[32px] shadow-xl border border-gray-100">
+        <h3 className="text-[#191919] font-semibold mb-4 text-sm uppercase tracking-wide">Desempenho por Critério (Média)</h3>
         <div className="h-40">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={criteriaAvg} layout="vertical">
               <XAxis type="number" hide domain={[0, 3]} />
               <YAxis dataKey="name" type="category" width={70} tick={{fontSize: 12}} />
               <Tooltip />
-              <Bar dataKey="score" fill="#3b82f6" radius={[0, 4, 4, 0]} barSize={20} />
+              <Bar dataKey="score" fill="#ff5500" radius={[0, 4, 4, 0]} barSize={20} />
             </BarChart>
           </ResponsiveContainer>
         </div>

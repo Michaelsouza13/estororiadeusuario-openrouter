@@ -1,8 +1,8 @@
 
-import React, { useState, useEffect, useRef } from 'react';
-import { AnalysisResult } from '../types';
-import { Save, Check, User, Edit2, Sparkles, Hash, ChevronDown, Search, Star, HelpCircle, ThumbsUp, ThumbsDown } from 'lucide-react';
-import { saveReferenceStory, removeReferenceStory } from '../utils/storage';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { AnalysisResult, GlossaryEntry } from '../types';
+import { Save, Check, User, Edit2, Sparkles, Hash, ChevronDown, Search, Star, HelpCircle, ThumbsUp, ThumbsDown, BookMarked } from 'lucide-react';
+import { saveReferenceStory, removeReferenceStory, saveGlossaryTerm } from '../utils/storage';
 
 interface AnalysisCardProps {
   result: AnalysisResult;
@@ -22,7 +22,7 @@ const ScoreSelector = ({ currentScore, onChange, label }: { currentScore: number
           const isActive = currentScore === val;
           let activeColor = 'bg-slate-200 text-slate-500';
           if (isActive) {
-             if (val === 3) activeColor = 'bg-blue-600 text-white shadow-lg shadow-blue-200';
+             if (val === 3) activeColor = 'bg-[#ff5500] text-white shadow-lg shadow-[#ff5500]/30';
              else if (val === 1) activeColor = 'bg-amber-500 text-white shadow-lg shadow-amber-200';
              else activeColor = 'bg-rose-500 text-white shadow-lg shadow-rose-200';
           }
@@ -50,6 +50,13 @@ const AnalysisCard: React.FC<AnalysisCardProps> = ({ result, onSave, onUpdate, i
   // Estado local para referência
   const [isReference, setIsReference] = useState(result.isReference || false);
 
+  // Estado para fluxo dúvida → glossário
+  const [pendingGlossary, setPendingGlossary] = useState<{
+    term: string;
+    isPositive: boolean;
+  } | null>(null);
+  const [glossaryMeaning, setGlossaryMeaning] = useState('');
+
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -72,8 +79,8 @@ const AnalysisCard: React.FC<AnalysisCardProps> = ({ result, onSave, onUpdate, i
 
   const isPerfect = result.totalScore === 9;
   const isGood = result.totalScore >= 6;
-  let borderColor = isPerfect ? 'border-blue-200' : isGood ? 'border-amber-100' : 'border-rose-100';
-  let shadowColor = isPerfect ? 'shadow-blue-500/10' : isGood ? 'shadow-amber-500/5' : 'shadow-rose-500/5';
+  let borderColor = isPerfect ? 'border-[#e29494]' : isGood ? 'border-amber-100' : 'border-rose-100';
+  let shadowColor = isPerfect ? 'shadow-[#e29494]/20' : isGood ? 'shadow-amber-500/5' : 'shadow-rose-500/5';
 
   const handleSaveClick = () => {
     if (onSave) {
@@ -118,32 +125,68 @@ const AnalysisCard: React.FC<AnalysisCardProps> = ({ result, onSave, onUpdate, i
     }
   };
 
-  const handleDoubtResolution = (isPositive: boolean) => {
-    if (!onUpdate) return;
+  const extractTermFromNote = (note: string): string | null => {
+    const singleQuoteMatch = note.match(/'([^']+)'/);
+    if (singleQuoteMatch) return singleQuoteMatch[1].trim();
+    const siglaMatch = note.match(/\b([A-ZÀ-Ú]{2,6})\b/);
+    if (siglaMatch) return siglaMatch[1].trim();
+    return null;
+  };
 
-    // LÓGICA DE APRENDIZADO:
-    // Movemos a resolução da dúvida para dentro do texto de FEEDBACK.
-    // Assim, se essa estória for salva como REFERÊNCIA (Star), a IA lerá este feedback no futuro
-    // e "aprenderá" que aquela suposição estava correta ou incorreta.
-    
+  const executeResolution = useCallback((isPositive: boolean) => {
+    if (!onUpdate) return;
     const contextPrefix = isPositive ? "✅ APRENDIZADO CONFIRMADO:" : "❌ CORREÇÃO DE CONTEXTO:";
     const resolutionText = `${contextPrefix} Sobre a dúvida "${result.uncertaintyNote}", o usuário indicou que a interpretação da IA estava ${isPositive ? 'CORRETA' : 'INCORRETA'}.`;
-
     const newFeedback = `${result.feedback}\n\n${resolutionText}`;
-
     onUpdate({
         ...result,
         feedback: newFeedback,
-        uncertaintyNote: undefined // Remove o alerta visual, pois foi resolvido e incorporado ao conhecimento
+        uncertaintyNote: undefined
     });
+  }, [result, onUpdate]);
+
+  const handleDoubtResolution = (isPositive: boolean) => {
+    if (!result.uncertaintyNote) return;
+    const term = extractTermFromNote(result.uncertaintyNote);
+    if (term) {
+      setPendingGlossary({ term, isPositive });
+      setGlossaryMeaning('');
+    } else {
+      executeResolution(isPositive);
+    }
+  };
+
+  const handleGlossarySave = async () => {
+    if (!pendingGlossary || !glossaryMeaning.trim()) return;
+    try {
+      const entry: GlossaryEntry = {
+        term: pendingGlossary.term.toUpperCase(),
+        meaning: glossaryMeaning.trim(),
+        source: 'auto',
+        createdAt: new Date().toISOString()
+      };
+      await saveGlossaryTerm(entry);
+      executeResolution(pendingGlossary.isPositive);
+      setPendingGlossary(null);
+      setGlossaryMeaning('');
+    } catch (e) {
+      alert("Erro ao salvar no glossário.");
+    }
+  };
+
+  const handleGlossarySkip = () => {
+    if (!pendingGlossary) return;
+    executeResolution(pendingGlossary.isPositive);
+    setPendingGlossary(null);
+    setGlossaryMeaning('');
   };
 
   const showSaveSuccess = isSaved || hasSavedLocally;
   const filteredOwners = availableOwners.filter(o => o.toLowerCase().includes(search.toLowerCase()));
 
   return (
-    <div className={`bg-white rounded-[40px] shadow-2xl border-2 ${borderColor} ${shadowColor} p-10 mb-8 transition-all duration-500 hover:shadow-blue-500/5 relative group overflow-hidden`}>
-      {isPerfect && <div className="absolute top-0 right-0 p-4 bg-blue-600 text-white rounded-bl-[40px] shadow-lg animate-pulse"><Sparkles size={24} /></div>}
+    <div className={`bg-white rounded-[40px] shadow-2xl border-2 ${borderColor} ${shadowColor} p-10 mb-8 transition-all duration-500 hover:shadow-[#ff5500]/5 relative group overflow-hidden`}>
+      {isPerfect && <div className="absolute top-0 right-0 p-4 bg-[#ff5500] text-white rounded-bl-[40px] shadow-lg animate-pulse"><Sparkles size={24} /></div>}
       
       {/* Doubt/Uncertainty Alert with Learning Buttons */}
       {result.uncertaintyNote && (
@@ -168,6 +211,44 @@ const AnalysisCard: React.FC<AnalysisCardProps> = ({ result, onSave, onUpdate, i
                         <ThumbsDown size={14} /> Não, incorreto
                     </button>
                 </div>
+
+                {/* Glossário mini-modal */}
+                {pendingGlossary && (
+                  <div className="mt-4 p-4 bg-white border border-[#ff5500]/20 rounded-xl shadow-lg animate-in fade-in slide-in-from-top-2">
+                    <div className="flex items-start gap-3">
+                      <BookMarked className="text-[#ff5500] mt-0.5 flex-shrink-0" size={20} />
+                      <div className="flex-1">
+                        <p className="text-xs font-black text-[#191919] uppercase tracking-widest mb-1">
+                          Termo detectado: <span className="text-[#ff5500]">{pendingGlossary.term}</span>
+                        </p>
+                        <p className="text-[10px] text-[#292929] mb-3">Deseja adicionar este termo ao Glossário para a IA aprender?</p>
+                        <input
+                          autoFocus
+                          className="w-full border border-gray-200 rounded-lg px-3 py-2 text-xs font-bold text-[#191919] outline-none focus:border-[#ff5500] transition-all mb-3"
+                          placeholder="Digite o significado do termo..."
+                          value={glossaryMeaning}
+                          onChange={e => setGlossaryMeaning(e.target.value)}
+                          onKeyDown={e => e.key === 'Enter' && handleGlossarySave()}
+                        />
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={handleGlossarySave}
+                            disabled={!glossaryMeaning.trim()}
+                            className="flex items-center gap-1.5 px-4 py-2 bg-[#ff5500] text-white rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-[#e64a00] transition-all disabled:opacity-50"
+                          >
+                            <BookMarked size={14} /> Salvar no Glossário
+                          </button>
+                          <button
+                            onClick={handleGlossarySkip}
+                            className="px-4 py-2 bg-gray-100 text-[#292929] rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-gray-200 transition-all"
+                          >
+                            Pular
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
             </div>
         </div>
       )}
@@ -179,9 +260,9 @@ const AnalysisCard: React.FC<AnalysisCardProps> = ({ result, onSave, onUpdate, i
               <div className="relative" ref={dropdownRef}>
                 <button 
                   onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                  className="flex items-center gap-3 text-slate-500 bg-slate-50 px-5 py-2.5 rounded-full border border-slate-100 hover:border-blue-400 transition-all group/btn"
+                  className="flex items-center gap-3 text-slate-500 bg-slate-50 px-5 py-2.5 rounded-full border border-slate-100 hover:border-[#ff5500] transition-all group/btn"
                 >
-                  <User size={16} className={currentOwner ? "text-blue-500" : "text-slate-400"} />
+                  <User size={16} className={currentOwner ? "text-[#ff5500]" : "text-slate-400"} />
                   <span className="font-bold text-slate-700 text-[11px] uppercase tracking-wider">
                     {currentOwner || "Agilista"}
                   </span>
@@ -205,7 +286,7 @@ const AnalysisCard: React.FC<AnalysisCardProps> = ({ result, onSave, onUpdate, i
                         <div 
                           key={o}
                           onClick={() => handleSelectOwner(o)}
-                          className={`px-4 py-2 text-[10px] font-bold text-slate-600 hover:bg-blue-50 cursor-pointer ${currentOwner === o ? 'text-blue-600 bg-blue-50/30' : ''}`}
+                          className={`px-4 py-2 text-[10px] font-bold text-slate-600 hover:bg-[#fff5f0] cursor-pointer ${currentOwner === o ? 'text-[#ff5500] bg-[#fff5f0]' : ''}`}
                         >
                           {o}
                         </div>
@@ -223,7 +304,7 @@ const AnalysisCard: React.FC<AnalysisCardProps> = ({ result, onSave, onUpdate, i
                     className={`flex items-center gap-2 px-3 py-2 rounded-full border transition-all ${
                         isReference 
                         ? "bg-yellow-50 border-yellow-200 text-yellow-600" 
-                        : "bg-slate-50 border-slate-100 text-slate-400 hover:text-yellow-500"
+                        : "bg-slate-50 border-slate-100 text-slate-400 hover:text-[#ff5500]"
                     }`}
                 >
                     <Star size={16} fill={isReference ? "currentColor" : "none"} />
@@ -232,7 +313,7 @@ const AnalysisCard: React.FC<AnalysisCardProps> = ({ result, onSave, onUpdate, i
               )}
             </div>
             
-            {result.id && <div className="flex items-center gap-1.5 text-[10px] font-black text-slate-300 tracking-widest uppercase bg-slate-50 px-3 py-1.5 rounded-full border border-slate-100"><Hash size={10} /> {result.id}</div>}
+            {result.id && <div className="flex items-center gap-1.5 text-[10px] font-black text-[#292929]/40 tracking-widest uppercase bg-[#f8f7f5] px-3 py-1.5 rounded-full border border-gray-100"><Hash size={10} /> {result.id}</div>}
           </div>
 
           <div className="space-y-3">
@@ -247,8 +328,8 @@ const AnalysisCard: React.FC<AnalysisCardProps> = ({ result, onSave, onUpdate, i
 
           {(!isPerfect || result.improvedVersion) && (
             <div className="space-y-4 pt-2">
-              <h4 className="text-[10px] font-black text-blue-600 uppercase tracking-[0.2em] flex items-center gap-2"><Sparkles size={16} /> Refino Sugerido</h4>
-              <div className="text-blue-900 bg-blue-50/50 p-7 rounded-[30px] border-2 border-blue-100 text-xl font-black leading-relaxed shadow-sm">"{result.improvedVersion}"</div>
+              <h4 className="text-[10px] font-black text-[#ff5500] uppercase tracking-[0.2em] flex items-center gap-2"><Sparkles size={16} /> Refino Sugerido</h4>
+              <div className="text-[#191919] bg-[#fff5f0]/50 p-7 rounded-[30px] border-2 border-[#ff5500]/10 text-xl font-black leading-relaxed shadow-sm">"{result.improvedVersion}"</div>
             </div>
           )}
         </div>
@@ -257,7 +338,7 @@ const AnalysisCard: React.FC<AnalysisCardProps> = ({ result, onSave, onUpdate, i
           <div className="space-y-8">
             <div className="text-center p-8 rounded-[40px] bg-slate-50/80 border border-slate-100 shadow-inner group-hover:bg-white transition-colors duration-500">
               <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 block">Score de Auditoria</span>
-              <div className={`text-8xl font-black italic transition-all transform group-hover:scale-110 ${isPerfect ? 'text-blue-600' : isGood ? 'text-amber-500' : 'text-rose-500'}`}>{result.totalScore}<span className="text-3xl text-slate-300 not-italic ml-1">/9</span></div>
+              <div className={`text-8xl font-black italic transition-all transform group-hover:scale-110 ${isPerfect ? 'text-[#ff5500]' : isGood ? 'text-amber-500' : 'text-rose-500'}`}>{result.totalScore}<span className="text-3xl text-slate-300 not-italic ml-1">/9</span></div>
             </div>
             <div className="grid grid-cols-1 gap-4">
               <ScoreSelector label="Persona" currentScore={result.criteriaScores.persona} onChange={(val) => handleScoreChange('persona', val)} />

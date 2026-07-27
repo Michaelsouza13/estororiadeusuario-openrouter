@@ -84,8 +84,8 @@ const HistoryView: React.FC<HistoryViewProps> = ({ history, onClearHistory, onDe
 
   if (history.length === 0) {
     return (
-      <div className="text-center py-20 bg-white rounded-xl shadow-sm border border-gray-200">
-        <p className="text-gray-500">Nenhum histórico de análise encontrado.</p>
+       <div className="text-center py-20 bg-white rounded-[32px] shadow-xl border border-gray-100">
+        <p className="text-[#292929]">Nenhum histórico de análise encontrado.</p>
       </div>
     );
   }
@@ -94,38 +94,38 @@ const HistoryView: React.FC<HistoryViewProps> = ({ history, onClearHistory, onDe
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
-      <div className="flex flex-col md:flex-row justify-between items-end gap-4 bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+      <div className="flex flex-col md:flex-row justify-between items-end gap-4 bg-white p-4 rounded-[32px] border border-gray-100 shadow-xl">
         <div className="w-full md:w-auto flex-1 gap-4 flex flex-col md:flex-row">
            <div className="relative">
-             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
-             <input 
-               type="text" 
-               placeholder="Buscar por texto ou ID..." 
-               className="pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none w-full md:w-64 font-bold text-slate-600 placeholder:font-normal"
-               value={searchTerm}
-               onChange={(e) => setSearchTerm(e.target.value)}
-             />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#292929]/40" size={18} />
+              <input 
+                type="text" 
+                placeholder="Buscar por texto ou ID..." 
+                className="pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#ff5500] outline-none w-full md:w-64 font-bold text-[#191919] placeholder:font-normal"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
            </div>
            
            <div className="flex items-center gap-2">
-             <Filter size={18} className="text-gray-400" />
-             <select 
-               className="border border-gray-200 rounded-lg py-2 px-3 bg-white outline-none focus:ring-2 focus:ring-blue-500 text-sm font-bold text-slate-600"
-               value={ownerFilter}
-               onChange={(e) => setOwnerFilter(e.target.value)}
-             >
-               <option value="all">Todos Agilistas</option>
-               {owners.map(o => <option key={o} value={o}>{o}</option>)}
-             </select>
+              <Filter size={18} className="text-[#292929]/40" />
+              <select 
+                className="border border-gray-200 rounded-lg py-2 px-3 bg-white outline-none focus:ring-2 focus:ring-[#ff5500] text-sm font-bold text-[#191919]"
+                value={ownerFilter}
+                onChange={(e) => setOwnerFilter(e.target.value)}
+              >
+                <option value="all">Todos Agilistas</option>
+                {owners.map(o => <option key={o} value={o}>{o}</option>)}
+              </select>
 
-             <select 
-               className="border border-gray-200 rounded-lg py-2 px-3 bg-white outline-none focus:ring-2 focus:ring-blue-500 text-sm font-bold text-slate-600"
-               value={quarterFilter}
-               onChange={(e) => setQuarterFilter(e.target.value)}
-             >
-               <option value="all">Todos Trimestres</option>
-               {quarters.map(q => <option key={q} value={q}>{q}</option>)}
-             </select>
+              <select 
+                className="border border-gray-200 rounded-lg py-2 px-3 bg-white outline-none focus:ring-2 focus:ring-[#ff5500] text-sm font-bold text-[#191919]"
+                value={quarterFilter}
+                onChange={(e) => setQuarterFilter(e.target.value)}
+              >
+                <option value="all">Todos Trimestres</option>
+                {quarters.map(q => <option key={q} value={q}>{q}</option>)}
+              </select>
            </div>
         </div>
 
@@ -166,12 +166,12 @@ const HistoryView: React.FC<HistoryViewProps> = ({ history, onClearHistory, onDe
       <div className="bg-white rounded-[32px] shadow-xl border border-gray-100 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm text-left">
-            <thead className="bg-slate-50 text-slate-400 font-black text-[10px] uppercase tracking-widest border-b border-gray-100">
+            <thead className="bg-[#f8f7f5] text-[#292929] font-black text-[10px] uppercase tracking-widest border-b border-gray-100">
               <tr>
                 <th className="px-4 py-4 w-10">
-                   <button onClick={toggleSelectAll} className="flex items-center justify-center hover:text-blue-600 transition-colors">
-                       {allSelected ? <CheckSquare size={20} className="text-blue-600" /> : <Square size={20} />}
-                   </button>
+                    <button onClick={toggleSelectAll} className="flex items-center justify-center hover:text-[#ff5500] transition-colors">
+                        {allSelected ? <CheckSquare size={20} className="text-[#ff5500]" /> : <Square size={20} />}
+                    </button>
                 </th>
                 <th className="px-6 py-4 w-24">Data/Q</th>
                 <th className="px-6 py-4 w-40">Agilista</th>
@@ -182,17 +182,17 @@ const HistoryView: React.FC<HistoryViewProps> = ({ history, onClearHistory, onDe
             </thead>
             <tbody className="divide-y divide-gray-50">
               {filteredData.map((item, idx) => (
-                <tr key={idx} className={`hover:bg-blue-50/30 transition-colors group ${selectedIds.includes(item.id || '') ? 'bg-blue-50/50' : ''}`}>
+                <tr key={idx} className={`hover:bg-[#fff5f0]/30 transition-colors group ${selectedIds.includes(item.id || '') ? 'bg-[#fff5f0]/50' : ''}`}>
                   <td className="px-4 py-4">
-                      <button onClick={() => toggleSelectRow(item.id || '')} className={`flex items-center justify-center transition-colors ${selectedIds.includes(item.id || '') ? 'text-blue-600' : 'text-slate-200 group-hover:text-slate-300'}`}>
+                      <button onClick={() => toggleSelectRow(item.id || '')} className={`flex items-center justify-center transition-colors ${selectedIds.includes(item.id || '') ? 'text-[#ff5500]' : 'text-[#292929]/20 group-hover:text-[#292929]/30'}`}>
                          {selectedIds.includes(item.id || '') ? <CheckSquare size={20} /> : <Square size={20} />}
                       </button>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="font-bold text-slate-700">{item.date}</div>
-                    <div className="text-[10px] font-black text-blue-500 uppercase">{item.quarter}</div>
+                    <div className="font-bold text-[#191919]">{item.date}</div>
+                    <div className="text-[10px] font-black text-[#ff5500] uppercase">{item.quarter}</div>
                   </td>
-                  <td className="px-6 py-4 font-black text-[11px] text-slate-500 uppercase">{item.owner || '-'}</td>
+                  <td className="px-6 py-4 font-black text-[11px] text-[#292929] uppercase">{item.owner || '-'}</td>
                   <td className="px-6 py-4">
                     <div className="text-slate-600 font-medium line-clamp-2 max-w-md text-xs italic" title={item.originalStory}>
                       "{item.originalStory}"
@@ -200,20 +200,20 @@ const HistoryView: React.FC<HistoryViewProps> = ({ history, onClearHistory, onDe
                   </td>
                   <td className="px-6 py-4 text-center">
                     <div className={`inline-flex items-center justify-center w-12 h-12 rounded-2xl font-black italic text-lg ${
-                      item.totalScore === 9 ? 'bg-blue-50 text-blue-600 border border-blue-100' : 
+                      item.totalScore === 9 ? 'bg-[#fff5f0] text-[#ff5500] border border-[#ff5500]/20' : 
                       item.totalScore >= 6 ? 'bg-amber-50 text-amber-600 border border-amber-100' : 'bg-rose-50 text-rose-600 border border-rose-100'
                     }`}>
                       {item.totalScore}
                     </div>
                   </td>
-                  <td className="px-6 py-4 text-slate-300 font-mono text-[10px] uppercase tracking-tighter">{item.id}</td>
+                  <td className="px-6 py-4 text-[#292929]/30 font-mono text-[10px] uppercase tracking-tighter">{item.id}</td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
         {filteredData.length === 0 && (
-            <div className="p-16 text-center text-slate-300 italic">Nenhum registro encontrado para estes filtros.</div>
+            <div className="p-16 text-center text-[#292929]/30 italic">Nenhum registro encontrado para estes filtros.</div>
         )}
       </div>
     </div>
