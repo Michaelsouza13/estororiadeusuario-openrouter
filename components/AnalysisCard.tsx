@@ -15,12 +15,12 @@ interface AnalysisCardProps {
 
 const ScoreSelector = ({ currentScore, onChange, label }: { currentScore: number; onChange: (val: number) => void; label: string; }) => {
   return (
-    <div className="flex flex-col items-center p-4 rounded-3xl bg-slate-50 border border-slate-100 min-w-[120px] transition-all hover:bg-white hover:shadow-xl hover:shadow-slate-200/50">
-      <span className="text-[10px] font-black uppercase text-slate-400 mb-4 tracking-widest">{label}</span>
+    <div className="flex flex-col items-center p-4 rounded-3xl bg-[var(--bg-muted)] border border-[var(--border-muted)] min-w-[120px] transition-all hover:bg-[var(--bg-surface)] hover:shadow-xl">
+      <span className="text-[10px] font-black uppercase text-[var(--text-muted)] mb-4 tracking-widest">{label}</span>
       <div className="flex gap-2">
         {[0, 1, 3].map((val) => {
           const isActive = currentScore === val;
-          let activeColor = 'bg-slate-200 text-slate-500';
+          let activeColor = 'bg-[var(--bg-muted)] text-[var(--text-secondary)]';
           if (isActive) {
              if (val === 3) activeColor = 'bg-[#ff5500] text-white shadow-lg shadow-[#ff5500]/30';
              else if (val === 1) activeColor = 'bg-amber-500 text-white shadow-lg shadow-amber-200';
@@ -30,7 +30,7 @@ const ScoreSelector = ({ currentScore, onChange, label }: { currentScore: number
             <button
               key={val}
               onClick={() => onChange(val)}
-              className={`w-10 h-10 rounded-2xl text-xs font-black transition-all transform hover:scale-110 active:scale-90 ${activeColor} ${!isActive ? 'hover:bg-slate-300' : ''}`}
+              className={`w-10 h-10 rounded-2xl text-xs font-black transition-all transform hover:scale-110 active:scale-90 ${activeColor} ${!isActive ? 'hover:bg-[var(--border-light)]' : ''}`}
             >
               {val}
             </button>
@@ -185,7 +185,7 @@ const AnalysisCard: React.FC<AnalysisCardProps> = ({ result, onSave, onUpdate, i
   const filteredOwners = availableOwners.filter(o => o.toLowerCase().includes(search.toLowerCase()));
 
   return (
-    <div className={`bg-white rounded-[40px] shadow-2xl border-2 ${borderColor} ${shadowColor} p-10 mb-8 transition-all duration-500 hover:shadow-[#ff5500]/5 relative group overflow-hidden`}>
+    <div className={`bg-[var(--bg-surface)] rounded-[40px] shadow-[var(--shadow-surface)] border-2 ${borderColor} ${shadowColor} p-10 mb-8 transition-all duration-500 hover:shadow-[#ff5500]/5 relative group overflow-hidden`}>
       {isPerfect && <div className="absolute top-0 right-0 p-4 bg-[#ff5500] text-white rounded-bl-[40px] shadow-lg animate-pulse"><Sparkles size={24} /></div>}
       
       {/* Doubt/Uncertainty Alert with Learning Buttons */}
@@ -260,22 +260,22 @@ const AnalysisCard: React.FC<AnalysisCardProps> = ({ result, onSave, onUpdate, i
               <div className="relative" ref={dropdownRef}>
                 <button 
                   onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                  className="flex items-center gap-3 text-slate-500 bg-slate-50 px-5 py-2.5 rounded-full border border-slate-100 hover:border-[#ff5500] transition-all group/btn"
+                  className="flex items-center gap-3 text-[var(--text-muted)] bg-[var(--bg-muted)] px-5 py-2.5 rounded-full border border-[var(--border-muted)] hover:border-[#ff5500] transition-all group/btn"
                 >
-                  <User size={16} className={currentOwner ? "text-[#ff5500]" : "text-slate-400"} />
-                  <span className="font-bold text-slate-700 text-[11px] uppercase tracking-wider">
+                  <User size={16} className={currentOwner ? "text-[#ff5500]" : "text-[var(--text-muted)]"} />
+                  <span className="font-bold text-[var(--text-primary)] text-[11px] uppercase tracking-wider">
                     {currentOwner || "Agilista"}
                   </span>
-                  <ChevronDown size={14} className={`text-slate-400 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} />
+                  <ChevronDown size={14} className={`text-[var(--text-muted)] transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} />
                 </button>
 
                 {isDropdownOpen && (
-                  <div className="absolute top-full left-0 mt-2 w-64 bg-white border border-slate-200 rounded-2xl shadow-2xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-2">
-                    <div className="p-2 border-b border-slate-100 bg-slate-50 flex items-center gap-2">
-                      <Search size={12} className="text-slate-400" />
+                  <div className="absolute top-full left-0 mt-2 w-64 bg-[var(--bg-surface)] border border-[var(--border-light)] rounded-2xl shadow-[var(--shadow-surface)] z-50 overflow-hidden animate-in fade-in slide-in-from-top-2">
+                    <div className="p-2 border-b border-[var(--border-muted)] bg-[var(--bg-muted)] flex items-center gap-2">
+                      <Search size={12} className="text-[var(--text-muted)]" />
                       <input 
                         autoFocus
-                        className="bg-transparent border-none outline-none text-[10px] font-bold text-slate-600 w-full"
+                        className="bg-transparent border-none outline-none text-[10px] font-bold text-[var(--text-primary)] w-full"
                         placeholder="Filtrar..."
                         value={search}
                         onChange={e => setSearch(e.target.value)}
@@ -286,7 +286,7 @@ const AnalysisCard: React.FC<AnalysisCardProps> = ({ result, onSave, onUpdate, i
                         <div 
                           key={o}
                           onClick={() => handleSelectOwner(o)}
-                          className={`px-4 py-2 text-[10px] font-bold text-slate-600 hover:bg-[#fff5f0] cursor-pointer ${currentOwner === o ? 'text-[#ff5500] bg-[#fff5f0]' : ''}`}
+                          className={`px-4 py-2 text-[10px] font-bold text-[var(--text-secondary)] hover:bg-[var(--hover-bg)] cursor-pointer ${currentOwner === o ? 'text-[#ff5500] bg-[var(--hover-bg)]' : ''}`}
                         >
                           {o}
                         </div>
@@ -304,7 +304,7 @@ const AnalysisCard: React.FC<AnalysisCardProps> = ({ result, onSave, onUpdate, i
                     className={`flex items-center gap-2 px-3 py-2 rounded-full border transition-all ${
                         isReference 
                         ? "bg-yellow-50 border-yellow-200 text-yellow-600" 
-                        : "bg-slate-50 border-slate-100 text-slate-400 hover:text-[#ff5500]"
+                        : "bg-[var(--bg-muted)] border-[var(--border-muted)] text-[var(--text-muted)] hover:text-[#ff5500]"
                     }`}
                 >
                     <Star size={16} fill={isReference ? "currentColor" : "none"} />
@@ -313,17 +313,17 @@ const AnalysisCard: React.FC<AnalysisCardProps> = ({ result, onSave, onUpdate, i
               )}
             </div>
             
-            {result.id && <div className="flex items-center gap-1.5 text-[10px] font-black text-[#292929]/40 tracking-widest uppercase bg-[#f8f7f5] px-3 py-1.5 rounded-full border border-gray-100"><Hash size={10} /> {result.id}</div>}
+            {result.id && <div className="flex items-center gap-1.5 text-[10px] font-black text-[var(--text-muted)] tracking-widest uppercase bg-[var(--bg-muted)] px-3 py-1.5 rounded-full border border-[var(--border-muted)]"><Hash size={10} /> {result.id}</div>}
           </div>
 
           <div className="space-y-3">
-            <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-slate-300"></div> Entrada Original</h4>
-            <div className="text-slate-800 font-bold italic bg-slate-50 p-6 rounded-[30px] border border-slate-100 text-xl leading-relaxed shadow-inner group-hover:bg-white transition-colors duration-500">"{result.originalStory}"</div>
+            <h4 className="text-[10px] font-black text-[var(--text-muted)] uppercase tracking-[0.2em] flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-[var(--border-light)]"></div> Entrada Original</h4>
+            <div className="text-[var(--text-primary)] font-bold italic bg-[var(--bg-muted)] p-6 rounded-[30px] border border-[var(--border-muted)] text-xl leading-relaxed shadow-inner group-hover:bg-[var(--bg-surface)] transition-colors duration-500">"{result.originalStory}"</div>
           </div>
 
           <div className="space-y-3">
-            <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-indigo-400"></div> Diagnóstico Técnico</h4>
-            <p className="text-slate-600 text-base leading-relaxed font-semibold pl-4 border-l-2 border-slate-100 whitespace-pre-line">{result.feedback}</p>
+            <h4 className="text-[10px] font-black text-[var(--text-muted)] uppercase tracking-[0.2em] flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-[var(--text-muted)]"></div> Diagnóstico Técnico</h4>
+            <p className="text-[var(--text-secondary)] text-base leading-relaxed font-semibold pl-4 border-l-2 border-[var(--border-muted)] whitespace-pre-line">{result.feedback}</p>
           </div>
 
           {(!isPerfect || result.improvedVersion) && (
@@ -336,9 +336,9 @@ const AnalysisCard: React.FC<AnalysisCardProps> = ({ result, onSave, onUpdate, i
 
         <div className="flex flex-col justify-between min-w-[280px] border-l-2 border-slate-50 pl-0 lg:pl-12 pt-8 lg:pt-0 gap-8">
           <div className="space-y-8">
-            <div className="text-center p-8 rounded-[40px] bg-slate-50/80 border border-slate-100 shadow-inner group-hover:bg-white transition-colors duration-500">
-              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 block">Score de Auditoria</span>
-              <div className={`text-8xl font-black italic transition-all transform group-hover:scale-110 ${isPerfect ? 'text-[#ff5500]' : isGood ? 'text-amber-500' : 'text-rose-500'}`}>{result.totalScore}<span className="text-3xl text-slate-300 not-italic ml-1">/9</span></div>
+            <div className="text-center p-8 rounded-[40px] bg-[var(--bg-muted)] border border-[var(--border-muted)] shadow-inner group-hover:bg-[var(--bg-surface)] transition-colors duration-500">
+              <span className="text-[10px] font-black text-[var(--text-muted)] uppercase tracking-widest mb-3 block">Score de Auditoria</span>
+              <div className={`text-8xl font-black italic transition-all transform group-hover:scale-110 ${isPerfect ? 'text-[#ff5500]' : isGood ? 'text-amber-500' : 'text-rose-500'}`}>{result.totalScore}<span className="text-3xl text-[var(--text-muted)] not-italic ml-1">/9</span></div>
             </div>
             <div className="grid grid-cols-1 gap-4">
               <ScoreSelector label="Persona" currentScore={result.criteriaScores.persona} onChange={(val) => handleScoreChange('persona', val)} />
@@ -347,7 +347,7 @@ const AnalysisCard: React.FC<AnalysisCardProps> = ({ result, onSave, onUpdate, i
             </div>
           </div>
           {onSave && (
-            <button onClick={handleSaveClick} disabled={showSaveSuccess} className={`w-full py-5 px-8 rounded-3xl font-black text-[11px] uppercase tracking-[0.2em] flex items-center justify-center gap-4 transition-all transform active:scale-95 ${showSaveSuccess ? 'bg-emerald-50 text-emerald-600 border-2 border-emerald-100' : 'bg-slate-900 hover:bg-black text-white shadow-2xl'}`}>
+            <button onClick={handleSaveClick} disabled={showSaveSuccess} className={`w-full py-5 px-8 rounded-3xl font-black text-[11px] uppercase tracking-[0.2em] flex items-center justify-center gap-4 transition-all transform active:scale-95 ${showSaveSuccess ? 'bg-emerald-50 text-emerald-600 border-2 border-emerald-100' : 'bg-[#191919] hover:bg-black text-white shadow-2xl'}`}>
               {showSaveSuccess ? <><Check size={20} /> Protocolado</> : <><Save size={20} /> Salvar Auditoria</>}
             </button>
           )}

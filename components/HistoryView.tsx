@@ -84,8 +84,8 @@ const HistoryView: React.FC<HistoryViewProps> = ({ history, onClearHistory, onDe
 
   if (history.length === 0) {
     return (
-       <div className="text-center py-20 bg-white rounded-[32px] shadow-xl border border-gray-100">
-        <p className="text-[#292929]">Nenhum histórico de análise encontrado.</p>
+       <div className="text-center py-20 bg-[var(--bg-surface)] rounded-[32px] shadow-[var(--shadow-surface)] border border-[var(--border-light)]">
+        <p className="text-[var(--text-secondary)]">Nenhum histórico de análise encontrado.</p>
       </div>
     );
   }
@@ -94,23 +94,23 @@ const HistoryView: React.FC<HistoryViewProps> = ({ history, onClearHistory, onDe
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
-      <div className="flex flex-col md:flex-row justify-between items-end gap-4 bg-white p-4 rounded-[32px] border border-gray-100 shadow-xl">
+      <div className="flex flex-col md:flex-row justify-between items-end gap-4 bg-[var(--bg-surface)] p-4 rounded-[32px] border border-[var(--border-light)] shadow-[var(--shadow-surface)]">
         <div className="w-full md:w-auto flex-1 gap-4 flex flex-col md:flex-row">
            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#292929]/40" size={18} />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[var(--text-muted)]" size={18} />
               <input 
                 type="text" 
                 placeholder="Buscar por texto ou ID..." 
-                className="pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#ff5500] outline-none w-full md:w-64 font-bold text-[#191919] placeholder:font-normal"
+                className="pl-10 pr-4 py-2 border border-[var(--border-light)] rounded-lg focus:ring-2 focus:ring-[#ff5500] outline-none w-full md:w-64 font-bold text-[var(--text-primary)] bg-[var(--bg-surface)] placeholder:text-[var(--text-muted)]"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
            </div>
            
            <div className="flex items-center gap-2">
-              <Filter size={18} className="text-[#292929]/40" />
+              <Filter size={18} className="text-[var(--text-muted)]" />
               <select 
-                className="border border-gray-200 rounded-lg py-2 px-3 bg-white outline-none focus:ring-2 focus:ring-[#ff5500] text-sm font-bold text-[#191919]"
+                className="border border-[var(--border-light)] rounded-lg py-2 px-3 bg-[var(--bg-surface)] outline-none focus:ring-2 focus:ring-[#ff5500] text-sm font-bold text-[var(--text-primary)]"
                 value={ownerFilter}
                 onChange={(e) => setOwnerFilter(e.target.value)}
               >
@@ -119,7 +119,7 @@ const HistoryView: React.FC<HistoryViewProps> = ({ history, onClearHistory, onDe
               </select>
 
               <select 
-                className="border border-gray-200 rounded-lg py-2 px-3 bg-white outline-none focus:ring-2 focus:ring-[#ff5500] text-sm font-bold text-[#191919]"
+                className="border border-[var(--border-light)] rounded-lg py-2 px-3 bg-[var(--bg-surface)] outline-none focus:ring-2 focus:ring-[#ff5500] text-sm font-bold text-[var(--text-primary)]"
                 value={quarterFilter}
                 onChange={(e) => setQuarterFilter(e.target.value)}
               >
@@ -163,10 +163,10 @@ const HistoryView: React.FC<HistoryViewProps> = ({ history, onClearHistory, onDe
         </div>
       </div>
 
-      <div className="bg-white rounded-[32px] shadow-xl border border-gray-100 overflow-hidden">
+      <div className="bg-[var(--bg-surface)] rounded-[32px] shadow-[var(--shadow-surface)] border border-[var(--border-light)] overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm text-left">
-            <thead className="bg-[#f8f7f5] text-[#292929] font-black text-[10px] uppercase tracking-widest border-b border-gray-100">
+            <thead className="bg-[var(--bg-muted)] text-[var(--text-secondary)] font-black text-[10px] uppercase tracking-widest border-b border-[var(--border-muted)]">
               <tr>
                 <th className="px-4 py-4 w-10">
                     <button onClick={toggleSelectAll} className="flex items-center justify-center hover:text-[#ff5500] transition-colors">
@@ -180,21 +180,21 @@ const HistoryView: React.FC<HistoryViewProps> = ({ history, onClearHistory, onDe
                 <th className="px-6 py-4 w-24">ID Protocolo</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-50">
+            <tbody className="divide-y divide-[var(--border-muted)]">
               {filteredData.map((item, idx) => (
-                <tr key={idx} className={`hover:bg-[#fff5f0]/30 transition-colors group ${selectedIds.includes(item.id || '') ? 'bg-[#fff5f0]/50' : ''}`}>
+                <tr key={idx} className={`hover:bg-[var(--hover-bg)] transition-colors group ${selectedIds.includes(item.id || '') ? 'bg-[var(--hover-bg)]' : ''}`}>
                   <td className="px-4 py-4">
-                      <button onClick={() => toggleSelectRow(item.id || '')} className={`flex items-center justify-center transition-colors ${selectedIds.includes(item.id || '') ? 'text-[#ff5500]' : 'text-[#292929]/20 group-hover:text-[#292929]/30'}`}>
+                      <button onClick={() => toggleSelectRow(item.id || '')} className={`flex items-center justify-center transition-colors ${selectedIds.includes(item.id || '') ? 'text-[#ff5500]' : 'text-[var(--text-muted)] group-hover:text-[var(--text-muted)]'}`}>
                          {selectedIds.includes(item.id || '') ? <CheckSquare size={20} /> : <Square size={20} />}
                       </button>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="font-bold text-[#191919]">{item.date}</div>
+                    <div className="font-bold text-[var(--text-primary)]">{item.date}</div>
                     <div className="text-[10px] font-black text-[#ff5500] uppercase">{item.quarter}</div>
                   </td>
-                  <td className="px-6 py-4 font-black text-[11px] text-[#292929] uppercase">{item.owner || '-'}</td>
+                  <td className="px-6 py-4 font-black text-[11px] text-[var(--text-secondary)] uppercase">{item.owner || '-'}</td>
                   <td className="px-6 py-4">
-                    <div className="text-slate-600 font-medium line-clamp-2 max-w-md text-xs italic" title={item.originalStory}>
+                    <div className="text-[var(--text-secondary)] font-medium line-clamp-2 max-w-md text-xs italic" title={item.originalStory}>
                       "{item.originalStory}"
                     </div>
                   </td>
@@ -206,14 +206,14 @@ const HistoryView: React.FC<HistoryViewProps> = ({ history, onClearHistory, onDe
                       {item.totalScore}
                     </div>
                   </td>
-                  <td className="px-6 py-4 text-[#292929]/30 font-mono text-[10px] uppercase tracking-tighter">{item.id}</td>
+                  <td className="px-6 py-4 text-[var(--text-muted)] font-mono text-[10px] uppercase tracking-tighter">{item.id}</td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
         {filteredData.length === 0 && (
-            <div className="p-16 text-center text-[#292929]/30 italic">Nenhum registro encontrado para estes filtros.</div>
+            <div className="p-16 text-center text-[var(--text-muted)] italic">Nenhum registro encontrado para estes filtros.</div>
         )}
       </div>
     </div>

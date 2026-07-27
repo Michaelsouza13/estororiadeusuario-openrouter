@@ -36,7 +36,7 @@ const KnowledgeBase: React.FC = () => {
   };
 
   if (isLoading) {
-    return <div className="flex justify-center p-20"><Loader2 className="animate-spin text-blue-600" size={40} /></div>;
+    return <div className="flex justify-center p-20"><Loader2 className="animate-spin text-[#ff5500]" size={40} /></div>;
   }
 
   return (
@@ -60,16 +60,16 @@ const KnowledgeBase: React.FC = () => {
       </div>
 
       {references.length === 0 ? (
-        <div className="text-center py-20 bg-white rounded-[40px] border-2 border-dashed border-slate-200">
-           <Star className="mx-auto text-slate-200 mb-4" size={48} />
-           <p className="text-slate-400 font-medium">Nenhum exemplo de referência salvo.</p>
-           <p className="text-slate-300 text-sm mt-2">Clique na estrela nos cards de análise para adicionar aqui.</p>
+        <div className="text-center py-20 bg-[var(--bg-surface)] rounded-[40px] border-2 border-dashed border-[var(--border-muted)]">
+           <Star className="mx-auto text-[var(--text-muted)] mb-4" size={48} />
+           <p className="text-[var(--text-secondary)] font-medium">Nenhum exemplo de referência salvo.</p>
+           <p className="text-[var(--text-muted)] text-sm mt-2">Clique na estrela nos cards de análise para adicionar aqui.</p>
         </div>
       ) : (
         <div className="space-y-8">
             {references.map((ref, idx) => (
                 <div key={ref.id || idx} className="relative">
-                    <div className="absolute -left-4 top-10 w-8 h-8 bg-yellow-400 rounded-full flex items-center justify-center text-white font-bold shadow-lg z-10 border-4 border-slate-50 text-xs">
+                    <div className="absolute -left-4 top-10 w-8 h-8 bg-yellow-400 rounded-full flex items-center justify-center text-white font-bold shadow-lg z-10 border-4 border-[var(--bg-body)] text-xs">
                         {idx + 1}
                     </div>
                     <AnalysisCard 

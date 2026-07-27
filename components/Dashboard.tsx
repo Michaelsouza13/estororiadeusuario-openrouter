@@ -29,15 +29,15 @@ const Dashboard: React.FC<DashboardProps> = ({ results }) => {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
       {/* Summary Card */}
-      <div className="bg-white p-6 rounded-[32px] shadow-xl border border-gray-100 flex flex-col justify-center items-center">
-        <h3 className="text-[#292929] font-medium mb-2">Média Geral</h3>
-        <div className="text-5xl font-bold text-[#191919]">{avgScore.toFixed(1)}</div>
-        <div className="text-sm text-[#292929]/50 mt-2">Em {total} histórias (Max 9)</div>
+      <div className="bg-[var(--bg-surface)] p-6 rounded-[32px] shadow-[var(--shadow-surface)] border border-[var(--border-light)] flex flex-col justify-center items-center">
+        <h3 className="text-[var(--text-secondary)] font-medium mb-2">Média Geral</h3>
+        <div className="text-5xl font-bold text-[var(--text-primary)]">{avgScore.toFixed(1)}</div>
+        <div className="text-sm text-[var(--text-muted)] mt-2">Em {total} histórias (Max 9)</div>
       </div>
 
       {/* Distribution Chart */}
-      <div className="bg-white p-6 rounded-[32px] shadow-xl border border-gray-100">
-        <h3 className="text-[#191919] font-semibold mb-4 text-sm uppercase tracking-wide">Distribuição de Qualidade</h3>
+      <div className="bg-[var(--bg-surface)] p-6 rounded-[32px] shadow-[var(--shadow-surface)] border border-[var(--border-light)]">
+        <h3 className="text-[var(--text-primary)] font-semibold mb-4 text-sm uppercase tracking-wide">Distribuição de Qualidade</h3>
         <div className="h-40">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
@@ -69,8 +69,8 @@ const Dashboard: React.FC<DashboardProps> = ({ results }) => {
       </div>
 
       {/* Weakness Analysis */}
-      <div className="bg-white p-6 rounded-[32px] shadow-xl border border-gray-100">
-        <h3 className="text-[#191919] font-semibold mb-4 text-sm uppercase tracking-wide">Desempenho por Critério (Média)</h3>
+      <div className="bg-[var(--bg-surface)] p-6 rounded-[32px] shadow-[var(--shadow-surface)] border border-[var(--border-light)]">
+        <h3 className="text-[var(--text-primary)] font-semibold mb-4 text-sm uppercase tracking-wide">Desempenho por Critério (Média)</h3>
         <div className="h-40">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={criteriaAvg} layout="vertical">

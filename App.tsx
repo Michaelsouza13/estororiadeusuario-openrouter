@@ -22,7 +22,7 @@ import GlossaryView from './components/GlossaryView';
 import { 
   BookOpen, Upload, Play, Loader2, Download, AlertCircle, 
   FileText, History, User, Shuffle, UserCheck, Search, 
-  Plus, Pencil, Trash2, X, Check, ChevronDown, Edit2, Star, Settings, Cpu, DollarSign, BookMarked 
+  Plus, Pencil, Trash2, X, Check, ChevronDown, Edit2, Star, Settings, Cpu, DollarSign, BookMarked, Sun, Moon 
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 
@@ -96,6 +96,17 @@ const App: React.FC = () => {
     return saved ? JSON.parse(saved) : null;
   });
   const [toast, setToast] = useState<string | null>(null);
+
+  const [isDark, setIsDark] = useState(() => {
+    const saved = localStorage.getItem('storyanalyst_dark');
+    if (saved !== null) return JSON.parse(saved);
+    return window.matchMedia('(prefers-color-scheme: dark)').matches;
+  });
+
+  useEffect(() => {
+    document.documentElement.classList.toggle('dark', isDark);
+    localStorage.setItem('storyanalyst_dark', JSON.stringify(isDark));
+  }, [isDark]);
   
   useEffect(() => {
     if (toast) {
@@ -456,8 +467,8 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#f8f7f5] text-[#191919] pb-20">
-      <header className="bg-white border-b border-gray-200 sticky top-0 z-10">
+    <div className="min-h-screen bg-[var(--bg-body)] text-[var(--text-primary)] pb-20">
+      <header className="bg-[var(--header-bg)] border-b border-[var(--border-light)] sticky top-0 z-10">
         <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="bg-[#ff5500] p-2 rounded-lg text-white shadow-lg shadow-[#ff5500]/30">
@@ -466,28 +477,35 @@ const App: React.FC = () => {
             <h1 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-[#ff5500] to-[#e29494]">
               StoryAnalyst AI
             </h1>
-            <div className="relative ml-3" ref={configRef}>
+            <button
+              onClick={() => setIsDark(!isDark)}
+              className="p-2 rounded-xl hover:bg-[var(--hover-bg)] transition-all active:scale-90"
+              title={isDark ? 'Modo claro' : 'Modo escuro'}
+            >
+              {isDark ? <Sun size={18} className="text-[var(--text-secondary)]" /> : <Moon size={18} className="text-[var(--text-secondary)]" />}
+            </button>
+            <div className="relative ml-1" ref={configRef}>
               <button
                 onClick={() => setIsConfigOpen(!isConfigOpen)}
-                className="p-2 rounded-xl hover:bg-slate-100 transition-all active:scale-90"
+                className="p-2 rounded-xl hover:bg-[var(--hover-bg)] transition-all active:scale-90"
                 title="Configurações"
               >
-                <Settings size={18} className="text-slate-400" />
+                <Settings size={18} className="text-[var(--text-secondary)]" />
               </button>
               {isConfigOpen && (
-                <div className="absolute right-0 mt-2 w-72 bg-white border border-slate-200 rounded-2xl shadow-2xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
-                  <div className="p-4 border-b border-slate-100">
-                    <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                <div className="absolute right-0 mt-2 w-72 bg-[var(--bg-surface)] border border-[var(--border-light)] rounded-2xl shadow-[var(--shadow-surface)] z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+                  <div className="p-4 border-b border-[var(--border-muted)]">
+                    <h4 className="text-xs font-black text-[var(--text-muted)] uppercase tracking-widest flex items-center gap-2">
                       <Settings size={14} /> Configurações
                     </h4>
                   </div>
                   <div className="p-4 space-y-4">
                     <div>
-                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 flex items-center gap-1">
+                      <p className="text-[10px] font-black text-[var(--text-muted)] uppercase tracking-widest mb-2 flex items-center gap-1">
                         <Cpu size={12} /> Modelo de IA
                       </p>
                       <div className="space-y-2">
-                        <label className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all ${useFreeModel ? 'bg-[#fff5f0] border-2 border-[#ff5500]/20' : 'bg-slate-50 border-2 border-transparent'}`}>
+                        <label className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all ${useFreeModel ? 'bg-[var(--bg-accent)] border-2 border-[#ff5500]/20' : 'bg-[var(--bg-muted)] border-2 border-transparent'}`}>
                           <input
                             type="radio"
                             name="model"
@@ -496,11 +514,11 @@ const App: React.FC = () => {
                             className="accent-[#ff5500]"
                           />
                           <div>
-                            <p className="text-xs font-bold text-slate-700">Free</p>
-                            <p className="text-[10px] text-slate-400">sem custo, 50 req/dia</p>
+                            <p className="text-xs font-bold text-[var(--text-primary)]">Free</p>
+                            <p className="text-[10px] text-[var(--text-muted)]">sem custo, 50 req/dia</p>
                           </div>
                         </label>
-                        <label className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all ${!useFreeModel ? 'bg-[#fff5f0] border-2 border-[#ff5500]/20' : 'bg-slate-50 border-2 border-transparent'}`}>
+                        <label className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all ${!useFreeModel ? 'bg-[var(--bg-accent)] border-2 border-[#ff5500]/20' : 'bg-[var(--bg-muted)] border-2 border-transparent'}`}>
                           <input
                             type="radio"
                             name="model"
@@ -509,24 +527,24 @@ const App: React.FC = () => {
                             className="accent-[#ff5500]"
                           />
                           <div>
-                            <p className="text-xs font-bold text-slate-700">DeepSeek V3 + Llama 70B</p>
-                            <p className="text-[10px] text-slate-400">requer créditos OpenRouter</p>
+                            <p className="text-xs font-bold text-[var(--text-primary)]">DeepSeek V3 + Llama 70B</p>
+                            <p className="text-[10px] text-[var(--text-muted)]">requer créditos OpenRouter</p>
                           </div>
                         </label>
                       </div>
                     </div>
-                    <div className="border-t border-slate-100 pt-4">
-                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 flex items-center gap-1">
+                    <div className="border-t border-[var(--border-muted)] pt-4">
+                      <p className="text-[10px] font-black text-[var(--text-muted)] uppercase tracking-widest mb-2 flex items-center gap-1">
                         <DollarSign size={12} /> Última consulta
                       </p>
                       {usageDisplay ? (
                         <div className="space-y-1 text-[11px]">
-                          <p className="text-slate-600"><span className="font-bold">Modelo:</span> {usageDisplay.model}</p>
-                          <p className="text-slate-600"><span className="font-bold">Tokens:</span> {usageDisplay.tokens ?? '-'}</p>
-                          <p className="text-slate-600"><span className="font-bold">Custo:</span> {usageDisplay.cost != null ? `$${usageDisplay.cost.toFixed(6)}` : '-'}</p>
+                          <p className="text-[var(--text-secondary)]"><span className="font-bold">Modelo:</span> {usageDisplay.model}</p>
+                          <p className="text-[var(--text-secondary)]"><span className="font-bold">Tokens:</span> {usageDisplay.tokens ?? '-'}</p>
+                          <p className="text-[var(--text-secondary)]"><span className="font-bold">Custo:</span> {usageDisplay.cost != null ? `$${usageDisplay.cost.toFixed(6)}` : '-'}</p>
                         </div>
                       ) : (
-                        <p className="text-[11px] text-slate-400 italic">Nenhuma consulta ainda</p>
+                        <p className="text-[11px] text-[var(--text-muted)] italic">Nenhuma consulta ainda</p>
                       )}
                     </div>
                   </div>
@@ -534,12 +552,12 @@ const App: React.FC = () => {
               )}
             </div>
           </div>
-          <div className="flex bg-gray-100 p-1 rounded-lg">
+          <div className="flex bg-[var(--bg-muted)] p-1 rounded-lg">
             {(['single', 'bulk', 'history', 'knowledge', 'glossary'] as const).map((tab) => (
               <button
                 key={tab}
                 onClick={() => { setActiveTab(tab); if (tab !== 'history' && tab !== 'knowledge' && tab !== 'glossary' && status !== AnalysisStatus.LOADING) setResults([]); }}
-                className={`px-3 py-1.5 text-sm font-medium rounded-md transition-all flex items-center gap-1.5 ${activeTab === tab ? 'bg-white shadow-sm text-[#ff5500]' : 'text-gray-500 hover:text-gray-700'}`}
+                className={`px-3 py-1.5 text-sm font-medium rounded-md transition-all flex items-center gap-1.5 ${activeTab === tab ? 'bg-[var(--bg-surface)] shadow-sm text-[#ff5500]' : 'text-[var(--text-muted)] hover:text-[var(--text-secondary)]'}`}
               >
                 {tab === 'history' && <History size={15} />}
                 {tab === 'knowledge' && <Star size={15} />}
@@ -557,48 +575,48 @@ const App: React.FC = () => {
         {activeTab !== 'history' && activeTab !== 'knowledge' && activeTab !== 'glossary' && (
           <section className="mb-8 flex flex-col md:flex-row items-center justify-between gap-6">
             <div className="text-left flex-1">
-              <h2 className="text-3xl font-extrabold text-[#191919] mb-2 tracking-tight">Auditoria de Requisitos</h2>
-              <p className="text-[#292929] max-w-lg font-medium leading-relaxed">
+              <h2 className="text-3xl font-extrabold text-[var(--text-primary)] mb-2 tracking-tight">Auditoria de Requisitos</h2>
+              <p className="text-[var(--text-secondary)] max-w-lg font-medium leading-relaxed">
                 Refine seu backlog com inteligência baseada na metodologia Marcos Inácio.
               </p>
               <div className="mt-3 flex items-center gap-2">
                 <span className="text-[10px] uppercase font-bold tracking-widest bg-[#ff5500] text-white px-2 py-0.5 rounded shadow-sm">
                   {getCurrentQuarter()}
                 </span>
-                <span className="text-[10px] uppercase font-bold tracking-widest bg-[#292929]/10 text-[#292929] px-2 py-0.5 rounded">
+                <span className="text-[10px] uppercase font-bold tracking-widest bg-[var(--bg-muted)] text-[var(--text-secondary)] px-2 py-0.5 rounded">
                   MARCOS INÁCIO ADVOGADOS
                 </span>
               </div>
             </div>
 
             <div className="w-full md:w-auto relative" ref={dropdownRef}>
-              <div className="bg-white p-4 rounded-2xl border border-gray-200 shadow-xl shadow-[#ff5500]/5 flex flex-col gap-2 min-w-[320px]">
+              <div className="bg-[var(--bg-surface)] p-4 rounded-2xl border border-[var(--border-light)] shadow-xl shadow-[#ff5500]/5 flex flex-col gap-2 min-w-[320px]">
                 <div className="flex items-center justify-between mb-1">
-                   <label className="text-[10px] font-black text-[#292929]/60 uppercase tracking-widest">Agilista Responsável</label>
+                   <label className="text-[10px] font-black text-[var(--text-muted)] uppercase tracking-widest">Agilista Responsável</label>
                    {defaultOwner && <div className="flex items-center gap-1 text-[10px] font-bold text-green-600 uppercase animate-pulse"><UserCheck size={10}/> Conectado</div>}
                 </div>
                 
                 <button 
                   onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                  className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl transition-all hover:border-[#ff5500] group"
+                  className="w-full flex items-center justify-between px-4 py-3 bg-[var(--bg-muted)] border border-[var(--border-light)] rounded-xl transition-all hover:border-[#ff5500] group"
                 >
                   <div className="flex items-center gap-3">
-                    <User size={18} className={defaultOwner ? "text-[#ff5500]" : "text-[#292929]/40"} />
-                    <span className={`font-bold ${defaultOwner ? "text-[#191919]" : "text-[#292929]/40"}`}>
+                    <User size={18} className={defaultOwner ? "text-[#ff5500]" : "text-[var(--text-muted)]"} />
+                    <span className={`font-bold ${defaultOwner ? "text-[var(--text-primary)]" : "text-[var(--text-muted)]"}`}>
                       {defaultOwner || "Selecione seu nome..."}
                     </span>
                   </div>
-                  <ChevronDown size={18} className={`text-[#292929]/40 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} />
+                  <ChevronDown size={18} className={`text-[var(--text-muted)] transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} />
                 </button>
 
                 {isDropdownOpen && (
-                  <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-slate-200 rounded-2xl shadow-2xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
-                    <div className="p-3 border-b border-slate-100 flex items-center gap-2 bg-slate-50">
-                      <Search size={14} className="text-slate-400" />
+                  <div className="absolute top-full left-0 right-0 mt-2 bg-[var(--bg-surface)] border border-[var(--border-light)] rounded-2xl shadow-[var(--shadow-surface)] z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+                    <div className="p-3 border-b border-[var(--border-muted)] flex items-center gap-2 bg-[var(--bg-muted)]">
+                      <Search size={14} className="text-[var(--text-muted)]" />
                       <input 
                         type="text" 
                         placeholder="Buscar agilista..."
-                        className="bg-transparent border-none outline-none text-xs font-bold text-slate-600 w-full placeholder-slate-300"
+                        className="bg-transparent border-none outline-none text-xs font-bold text-[var(--text-primary)] w-full placeholder-[var(--text-muted)]"
                         value={searchOwner}
                         onChange={(e) => setSearchOwner(e.target.value)}
                         autoFocus
@@ -635,14 +653,14 @@ const App: React.FC = () => {
                         </div>
                       ))}
                       {filteredAgilistas.length === 0 && (
-                        <div className="px-4 py-8 text-center text-slate-400 text-xs italic">Nenhum agilista encontrado</div>
+                        <div className="px-4 py-8 text-center text-[var(--text-muted)] text-xs italic">Nenhum agilista encontrado</div>
                       )}
                     </div>
 
-                    <div className="p-3 border-t border-slate-100 bg-slate-50/50 flex items-center gap-2">
+                    <div className="p-3 border-t border-[var(--border-muted)] bg-[var(--bg-muted)] flex items-center gap-2">
                       <input 
                         placeholder="Novo Agilista..."
-                        className="flex-1 bg-white border border-slate-200 rounded-lg px-3 py-2 text-[10px] font-black uppercase outline-none focus:border-[#ff5500] transition-all"
+                        className="flex-1 bg-[var(--bg-surface)] border border-[var(--border-light)] rounded-lg px-3 py-2 text-[10px] font-black uppercase outline-none focus:border-[#ff5500] transition-all text-[var(--text-primary)]"
                         value={newOwnerValue}
                         onChange={e => setNewOwnerValue(e.target.value)}
                         onKeyDown={e => e.key === 'Enter' && handleAddOwner()}
@@ -664,13 +682,13 @@ const App: React.FC = () => {
         {/* ÁREA DE CONTEÚDO PRINCIPAL (INPUTS) */}
         {activeTab === 'single' && (
           <section className="animate-in fade-in duration-500 max-w-3xl mx-auto">
-             <div className="bg-white p-6 rounded-3xl shadow-xl border border-[#ff5500]/10 mb-8 relative overflow-hidden group">
+             <div className="bg-[var(--bg-surface)] p-6 rounded-3xl shadow-[var(--shadow-surface)] border border-[#ff5500]/10 mb-8 relative overflow-hidden group">
                 <div className="absolute top-0 left-0 w-2 h-full bg-[#ff5500]"></div>
-                <h3 className="text-lg font-black text-[#191919] mb-4 flex items-center gap-2 uppercase tracking-wide">
+                <h3 className="text-lg font-black text-[var(--text-primary)] mb-4 flex items-center gap-2 uppercase tracking-wide">
                   <Edit2 size={20} className="text-[#ff5500]" /> Analisador de Estória
                 </h3>
                 <textarea 
-                  className="w-full h-40 p-5 rounded-2xl bg-slate-50 border-2 border-slate-100 focus:border-[#ff5500] focus:bg-white outline-none transition-all resize-none text-[#191919] font-medium text-lg placeholder-slate-400 leading-relaxed shadow-inner"
+                  className="w-full h-40 p-5 rounded-2xl bg-[var(--bg-muted)] border-2 border-[var(--border-muted)] focus:border-[#ff5500] focus:bg-[var(--bg-surface)] outline-none transition-all resize-none text-[var(--text-primary)] font-medium text-lg placeholder-[var(--text-muted)] leading-relaxed shadow-inner"
                   placeholder="Cole aqui sua estória de usuário (ex: Como usuário, quero...)"
                   value={inputText}
                   onChange={(e) => setInputText(e.target.value)}
@@ -691,7 +709,7 @@ const App: React.FC = () => {
 
         {activeTab === 'bulk' && (
           <section className="animate-in fade-in duration-500 max-w-4xl mx-auto">
-            <div className="bg-white p-20 rounded-[40px] shadow-2xl border-4 border-dashed border-slate-100 text-center hover:border-[#ff5500]/30 hover:bg-[#fff5f0]/30 transition-all group cursor-pointer relative mb-12" onClick={() => fileInputRef.current?.click()}>
+            <div className="bg-[var(--bg-surface)] p-20 rounded-[40px] shadow-[var(--shadow-surface)] border-4 border-dashed border-[var(--border-muted)] text-center hover:border-[#ff5500]/30 hover:bg-[var(--bg-accent)] transition-all group cursor-pointer relative mb-12" onClick={() => fileInputRef.current?.click()}>
               <input 
                 type="file" 
                 ref={fileInputRef} 
@@ -699,15 +717,15 @@ const App: React.FC = () => {
                 accept=".xlsx" 
                 className="hidden" 
               />
-              <div className="bg-white w-24 h-24 rounded-3xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform shadow-xl shadow-[#ff5500]/10 border border-slate-100">
+              <div className="bg-[var(--bg-surface)] w-24 h-24 rounded-3xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform shadow-xl shadow-[#ff5500]/10 border border-[var(--border-muted)]">
                 <Upload size={40} className="text-[#ff5500]" />
               </div>
-              <h3 className="text-3xl font-black text-[#191919] mb-4 tracking-tight">Importação em Lote</h3>
-              <p className="text-[#292929]/50 font-medium max-w-md mx-auto leading-relaxed mb-6 text-sm">
+              <h3 className="text-3xl font-black text-[var(--text-primary)] mb-4 tracking-tight">Importação em Lote</h3>
+              <p className="text-[var(--text-muted)] font-medium max-w-md mx-auto leading-relaxed mb-6 text-sm">
                 Auditoria automática de {samplingRate}% das estórias da sua planilha <br/> (Colunas D e G).
               </p>
               
-              <button className="bg-white border-2 border-slate-200 text-[#292929] px-10 py-4 rounded-2xl font-black text-xs uppercase tracking-[0.2em] hover:border-[#ff5500] hover:text-[#ff5500] transition-all shadow-sm group-hover:shadow-lg mb-8">
+              <button className="bg-[var(--bg-surface)] border-2 border-[var(--border-light)] text-[var(--text-secondary)] px-10 py-4 rounded-2xl font-black text-xs uppercase tracking-[0.2em] hover:border-[#ff5500] hover:text-[#ff5500] transition-all shadow-sm group-hover:shadow-lg mb-8">
                   Selecionar Planilha
               </button>
 
@@ -716,10 +734,10 @@ const App: React.FC = () => {
               </div>
               
                {/* Slider de Configuração da Amostragem */}
-               <div className="flex flex-col items-center justify-center mt-4 p-4 bg-slate-50 rounded-2xl border border-slate-100 max-w-md mx-auto" onClick={(e) => e.stopPropagation()}>
+               <div className="flex flex-col items-center justify-center mt-4 p-4 bg-[var(--bg-muted)] rounded-2xl border border-[var(--border-muted)] max-w-md mx-auto" onClick={(e) => e.stopPropagation()}>
                   <div className="flex items-center justify-between w-full mb-2 px-2">
-                    <span className="text-[10px] font-black text-[#292929]/60 uppercase tracking-widest flex items-center gap-1"><Settings size={12}/> Configurar Taxa</span>
-                    <span className="text-sm font-bold text-[#ff5500] bg-[#fff5f0] px-2 py-0.5 rounded-md border border-[#ff5500]/10">{samplingRate}%</span>
+                    <span className="text-[10px] font-black text-[var(--text-muted)] uppercase tracking-widest flex items-center gap-1"><Settings size={12}/> Configurar Taxa</span>
+                    <span className="text-sm font-bold text-[#ff5500] bg-[var(--bg-accent)] px-2 py-0.5 rounded-md border border-[#ff5500]/10">{samplingRate}%</span>
                   </div>
                   <input 
                     type="range" 
@@ -730,7 +748,7 @@ const App: React.FC = () => {
                     onChange={(e) => setSamplingRate(Number(e.target.value))}
                     className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-[#ff5500]"
                   />
-                  <div className="flex justify-between w-full text-[9px] text-slate-300 font-bold mt-1 px-1">
+                  <div className="flex justify-between w-full text-[9px] text-[var(--text-muted)] font-bold mt-1 px-1">
                     <span>10%</span>
                     <span>100%</span>
                   </div>
@@ -739,10 +757,10 @@ const App: React.FC = () => {
 
             {status === AnalysisStatus.LOADING && (
                <div className="max-w-xl mx-auto mb-12">
-                  <div className="flex justify-between text-xs font-black uppercase text-slate-500 mb-2 tracking-widest">
+                  <div className="flex justify-between text-xs font-black uppercase text-[var(--text-muted)] mb-2 tracking-widest">
                      <span className="flex items-center gap-2">
                        {bulkProgress.totalBatches > 0 && (
-                         <span className="bg-[#fff5f0] text-[#ff5500] px-2 py-0.5 rounded text-[10px]">
+                         <span className="bg-[var(--bg-accent)] text-[#ff5500] px-2 py-0.5 rounded text-[10px]">
                            Lote {bulkProgress.batchIndex}/{bulkProgress.totalBatches}
                          </span>
                        )}
@@ -750,23 +768,23 @@ const App: React.FC = () => {
                      </span>
                      <span>{Math.round((bulkProgress.current / bulkProgress.total) * 100)}%</span>
                   </div>
-                  <div className="h-4 bg-slate-100 rounded-full overflow-hidden border border-slate-200">
+                  <div className="h-4 bg-[var(--bg-muted)] rounded-full overflow-hidden border border-[var(--border-muted)]">
                     <div 
                       className="h-full bg-gradient-to-r from-[#ff5500] to-[#ff7733] transition-all duration-500 ease-out shadow-[0_0_15px_rgba(255,85,0,0.5)]" 
                       style={{ width: `${(bulkProgress.current / bulkProgress.total) * 100}%` }}
                     ></div>
                  </div>
                  <div className="flex items-center justify-between mt-3">
-                   <p className="text-center text-xs text-slate-400 font-medium">
-                     {bulkProgress.current} de {bulkProgress.total} histórias
-                     {bulkProgress.skipped > 0 && <span className="text-amber-500 ml-2">({bulkProgress.skipped} ignorados)</span>}
-                   </p>
-                   <div className="flex items-center gap-3">
-                     {bulkProgress.estimatedTime && (
-                       <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                         ~{bulkProgress.estimatedTime} restantes
-                       </span>
-                     )}
+                    <p className="text-center text-xs text-[var(--text-muted)] font-medium">
+                      {bulkProgress.current} de {bulkProgress.total} histórias
+                      {bulkProgress.skipped > 0 && <span className="text-amber-500 ml-2">({bulkProgress.skipped} ignorados)</span>}
+                    </p>
+                    <div className="flex items-center gap-3">
+                      {bulkProgress.estimatedTime && (
+                        <span className="text-[10px] font-black text-[var(--text-muted)] uppercase tracking-widest">
+                          ~{bulkProgress.estimatedTime} restantes
+                        </span>
+                      )}
                      <button
                        onClick={handleCancelBulk}
                        className="bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all active:scale-90"
@@ -799,7 +817,7 @@ const App: React.FC = () => {
         {results.length > 0 && activeTab !== 'history' && activeTab !== 'knowledge' && activeTab !== 'glossary' && (
           <section className="animate-in fade-in slide-in-from-bottom-8 duration-700">
              <div className="flex items-center justify-between mb-8 flex-wrap gap-4">
-               <h3 className="text-3xl font-black text-[#191919] flex items-center gap-4 tracking-tighter">
+               <h3 className="text-3xl font-black text-[var(--text-primary)] flex items-center gap-4 tracking-tighter">
                  <FileText className="text-[#ff5500]" size={32} /> Relatório de Auditoria
                </h3>
                <button onClick={handleExportCurrent} className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-8 py-4 rounded-2xl text-xs font-black uppercase tracking-widest transition-all shadow-xl shadow-emerald-100 active:scale-95">
