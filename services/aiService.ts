@@ -4,7 +4,7 @@ import { getRandomReferences } from "../utils/storage";
 
 const OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions";
 const MODELS = [
-  "deepseek/deepseek-v3",
+  "deepseek/deepseek-chat",
   "meta-llama/llama-3.1-70b-instruct"
 ];
 
