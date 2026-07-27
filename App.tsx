@@ -1,6 +1,6 @@
 
 import React, { useState, useRef, useEffect } from 'react';
-import { analyzeStory } from './services/aiService';
+import { analyzeStory, analyzeStoriesBatch } from './services/aiService';
 import { parseFile } from './utils/fileParser';
 import { AnalysisResult, AnalysisStatus } from './types';
 import { 
@@ -76,7 +76,8 @@ const App: React.FC = () => {
   const [status, setStatus] = useState<AnalysisStatus>(AnalysisStatus.IDLE);
   const [results, setResults] = useState<AnalysisResult[]>([]);
   const [historyData, setHistoryData] = useState<AnalysisResult[]>([]);
-  const [bulkProgress, setBulkProgress] = useState({ current: 0, total: 0, skipped: 0 });
+  const [bulkProgress, setBulkProgress] = useState({ current: 0, total: 0, skipped: 0, batchIndex: 0, totalBatches: 0, estimatedTime: '' });
+  const abortRef = useRef<AbortController | null>(null);
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [searchOwner, setSearchOwner] = useState('');
@@ -315,6 +316,14 @@ const App: React.FC = () => {
     }
   };
 
+  const handleCancelBulk = () => {
+    if (abortRef.current) {
+      abortRef.current.abort();
+      abortRef.current = null;
+    }
+    setStatus(AnalysisStatus.IDLE);
+  };
+
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -330,9 +339,12 @@ const App: React.FC = () => {
         return;
     }
 
+    const abortController = new AbortController();
+    abortRef.current = abortController;
+
     setStatus(AnalysisStatus.LOADING);
     setResults([]);
-    setBulkProgress({ current: 0, total: 0, skipped: 0 });
+    setBulkProgress({ current: 0, total: 0, skipped: 0, batchIndex: 0, totalBatches: 0, estimatedTime: '' });
     try {
       const allRows = await parseFile(file);
       if (allRows.length === 0) {
@@ -342,58 +354,76 @@ const App: React.FC = () => {
         return;
       }
       const totalInFile = allRows.length;
-      // Taxa de amostragem configurável
       const sampleSize = Math.max(1, Math.ceil(totalInFile * (samplingRate / 100)));
       const shuffled = [...allRows].sort(() => 0.5 - Math.random());
       const sampledRows = shuffled.slice(0, sampleSize);
-      
       const rowsToProcess = sampledRows.filter(row => !isStoryAnalyzed(historyData, row.id, row.owner || defaultOwner));
-      
       const skippedCount = sampledRows.length - rowsToProcess.length;
-      setBulkProgress({ current: 0, total: rowsToProcess.length, skipped: skippedCount });
-      
+      const totalBatches = Math.ceil(rowsToProcess.length / 10);
+
+      setBulkProgress({ current: 0, total: rowsToProcess.length, skipped: skippedCount, batchIndex: 0, totalBatches, estimatedTime: '' });
+
       if (rowsToProcess.length === 0) {
         setStatus(AnalysisStatus.IDLE);
         alert(`A amostragem selecionou ${sampledRows.length} itens (${samplingRate}%), mas todos já constam no histórico e foram ignorados.`);
         if (fileInputRef.current) fileInputRef.current.value = "";
         return;
       }
-      
-      const newResults: AnalysisResult[] = [];
-      const batchSize = 3; 
-      for (let i = 0; i < rowsToProcess.length; i += batchSize) {
-        const batch = rowsToProcess.slice(i, i + batchSize);
-        const batchResults = await Promise.all(batch.map(row => analyzeStory(row.story, useFreeModel).then(res => {
-              const usage = { model: res.model || '', tokens: res.tokens, cost: res.cost };
-              localStorage.setItem('storyanalyst_last_usage', JSON.stringify(usage));
-              setUsageDisplay(usage);
-              return res;
-            }).then(res => ({
-            ...res,
-            id: row.id,
-            owner: row.owner || defaultOwner,
-            date: new Date().toLocaleDateString('pt-BR'),
-            quarter: getCurrentQuarter()
-        }))));
-        newResults.push(...batchResults);
-        await saveToHistoryFirebase(batchResults);
-        setHistoryData(prev => [...prev, ...batchResults]);
-        setResults([...newResults]); 
-        setBulkProgress(prev => ({ ...prev, current: Math.min(i + batchSize, rowsToProcess.length) }));
-        if (i + batchSize < rowsToProcess.length) await new Promise(r => setTimeout(r, 2000));
+
+      const startWallTime = Date.now();
+      const batchResults = await analyzeStoriesBatch(
+        rowsToProcess.map(r => r.story),
+        useFreeModel,
+        10,
+        (completed, total, batchIdx, totalBatchesNum, model, tokens, cost) => {
+          const pct = completed / total;
+          const elapsedMs = Date.now() - startWallTime;
+          const remaining = pct > 0.05 ? Math.round((elapsedMs / pct - elapsedMs) / 1000) : 0;
+          const est = remaining > 60 ? `${Math.ceil(remaining / 60)} min` : `${Math.max(remaining, 1)}s`;
+          setBulkProgress(prev => ({ ...prev, current: completed, batchIndex: batchIdx, totalBatches: totalBatchesNum, estimatedTime: remaining > 0 ? est : '' }));
+          if (model) {
+            const usage = { model, tokens, cost };
+            localStorage.setItem('storyanalyst_last_usage', JSON.stringify(usage));
+            setUsageDisplay(usage);
+          }
+        },
+        abortController.signal
+      );
+
+      if (abortController.signal.aborted) {
+        setStatus(AnalysisStatus.IDLE);
+        return;
       }
+      const newResults: AnalysisResult[] = batchResults.map((res, idx) => ({
+        ...res,
+        id: rowsToProcess[idx].id,
+        owner: rowsToProcess[idx].owner || defaultOwner,
+        date: new Date().toLocaleDateString('pt-BR'),
+        quarter: getCurrentQuarter()
+      }));
+
+      await saveToHistoryFirebase(newResults);
+      setHistoryData(prev => [...prev, ...newResults]);
+      setResults(newResults);
+      setBulkProgress(prev => ({ ...prev, current: newResults.length }));
+
       setStatus(AnalysisStatus.SUCCESS);
-      const msg = `Auditoria concluida! ${rowsToProcess.length} historias processadas.`;
+      const msg = `Auditoria concluida! ${newResults.length} historias processadas.`;
       showToast(msg);
       playNotification();
       if ('Notification' in window && Notification.permission === 'granted') {
         new Notification('StoryAnalyst AI', { body: msg });
       }
-      sendWebhook(rowsToProcess.length);
-    } catch (error) {
+      sendWebhook(newResults.length);
+    } catch (error: any) {
+      if (error?.name === 'AbortError') {
+        setStatus(AnalysisStatus.IDLE);
+        return;
+      }
       console.error(error);
       setStatus(AnalysisStatus.ERROR);
     } finally {
+        abortRef.current = null;
         if (fileInputRef.current) fileInputRef.current.value = "";
     }
   };
@@ -708,7 +738,14 @@ const App: React.FC = () => {
             {status === AnalysisStatus.LOADING && (
                <div className="max-w-xl mx-auto mb-12">
                  <div className="flex justify-between text-xs font-black uppercase text-slate-500 mb-2 tracking-widest">
-                    <span>Processando Lote...</span>
+                    <span className="flex items-center gap-2">
+                      {bulkProgress.totalBatches > 0 && (
+                        <span className="bg-blue-100 text-blue-700 px-2 py-0.5 rounded text-[10px]">
+                          Lote {bulkProgress.batchIndex}/{bulkProgress.totalBatches}
+                        </span>
+                      )}
+                      Processando...
+                    </span>
                     <span>{Math.round((bulkProgress.current / bulkProgress.total) * 100)}%</span>
                  </div>
                  <div className="h-4 bg-slate-100 rounded-full overflow-hidden border border-slate-200">
@@ -717,10 +754,25 @@ const App: React.FC = () => {
                      style={{ width: `${(bulkProgress.current / bulkProgress.total) * 100}%` }}
                    ></div>
                  </div>
-                 <p className="text-center text-xs text-slate-400 mt-3 font-medium">
-                   Analisando item {bulkProgress.current} de {bulkProgress.total} 
-                   {bulkProgress.skipped > 0 && <span className="text-amber-500 ml-2">({bulkProgress.skipped} ignorados/já existem)</span>}
-                 </p>
+                 <div className="flex items-center justify-between mt-3">
+                   <p className="text-center text-xs text-slate-400 font-medium">
+                     {bulkProgress.current} de {bulkProgress.total} histórias
+                     {bulkProgress.skipped > 0 && <span className="text-amber-500 ml-2">({bulkProgress.skipped} ignorados)</span>}
+                   </p>
+                   <div className="flex items-center gap-3">
+                     {bulkProgress.estimatedTime && (
+                       <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                         ~{bulkProgress.estimatedTime} restantes
+                       </span>
+                     )}
+                     <button
+                       onClick={handleCancelBulk}
+                       className="bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all active:scale-90"
+                     >
+                       Cancelar
+                     </button>
+                   </div>
+                 </div>
                </div>
             )}
           </section>
