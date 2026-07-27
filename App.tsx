@@ -91,6 +91,16 @@ const App: React.FC = () => {
     const saved = localStorage.getItem('storyanalyst_last_usage');
     return saved ? JSON.parse(saved) : null;
   });
+  const [toast, setToast] = useState<string | null>(null);
+  
+  useEffect(() => {
+    if (toast) {
+      const t = setTimeout(() => setToast(null), 5000);
+      return () => clearTimeout(t);
+    }
+  }, [toast]);
+  
+  const showToast = (msg: string) => setToast(msg);
   
   const dropdownRef = useRef<HTMLDivElement>(null);
   const configRef = useRef<HTMLDivElement>(null);
@@ -331,6 +341,7 @@ const App: React.FC = () => {
         if (i + batchSize < rowsToProcess.length) await new Promise(r => setTimeout(r, 2000));
       }
       setStatus(AnalysisStatus.SUCCESS);
+      showToast(`Auditoria concluida! ${rowsToProcess.length} historias processadas.`);
     } catch (error) {
       console.error(error);
       setStatus(AnalysisStatus.ERROR);
@@ -448,7 +459,7 @@ const App: React.FC = () => {
             {['single', 'bulk', 'history', 'knowledge'].map((tab) => (
               <button
                 key={tab}
-                onClick={() => { setActiveTab(tab as any); if (tab !== 'history' && tab !== 'knowledge') setResults([]); }}
+                onClick={() => { setActiveTab(tab as any); if (tab !== 'history' && tab !== 'knowledge' && status !== AnalysisStatus.LOADING) setResults([]); }}
                 className={`px-4 py-1.5 text-sm font-medium rounded-md transition-all flex items-center gap-2 ${activeTab === tab ? 'bg-white shadow-sm text-blue-700' : 'text-gray-500 hover:text-gray-700'}`}
               >
                 {tab === 'history' && <History size={16} />}
@@ -708,6 +719,16 @@ const App: React.FC = () => {
            </div>
         )}
       </main>
+
+      {toast && (
+        <div className="fixed bottom-8 right-8 z-[100] animate-in fade-in slide-in-from-bottom-4 duration-300">
+          <div className="bg-emerald-600 text-white px-8 py-5 rounded-2xl shadow-2xl shadow-emerald-200 font-black text-xs uppercase tracking-widest flex items-center gap-4">
+            <span>✓</span>
+            {toast}
+            <button onClick={() => setToast(null)} className="text-emerald-200 hover:text-white transition-colors text-lg leading-none ml-2">×</button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -14,6 +14,18 @@ const cleanStoryText = (text: string): string => {
   return cleaned.trim();
 };
 
+const parseJSON = (text: string): any => {
+  try { return JSON.parse(text); } catch {}
+  const jsonMatch = text.match(/```(?:json)?\s*(\{[\s\S]*?\})\s*```/);
+  if (jsonMatch) try { return JSON.parse(jsonMatch[1]); } catch {}
+  const first = text.indexOf('{');
+  const last = text.lastIndexOf('}');
+  if (first !== -1 && last > first) {
+    try { return JSON.parse(text.slice(first, last + 1)); } catch {}
+  }
+  throw new Error(`Resposta da IA invalida: ${text.slice(0, 200)}`);
+};
+
 const buildSystemPrompt = (referenceExamples: AnalysisResult[]): string => {
   let examplesContext = "";
   if (referenceExamples.length > 0) {
@@ -131,7 +143,7 @@ export const analyzeStory = async (story: string, useFree: boolean = true): Prom
       const content = data.choices?.[0]?.message?.content;
       if (!content) throw new Error("No response from AI");
 
-      const result = JSON.parse(content);
+      const result = parseJSON(content);
 
       console.log("🤖 Modelo:", data.model);
       console.log("📊 Tokens:", data.usage?.total_tokens);
