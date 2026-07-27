@@ -117,7 +117,6 @@ export const analyzeStory = async (story: string): Promise<AnalysisResult> => {
             { role: "system", content: systemPrompt },
             { role: "user", content: cleanedStory }
           ],
-          response_format: { type: "json_object" },
           temperature: 0.1,
           top_p: 0.5
         })
