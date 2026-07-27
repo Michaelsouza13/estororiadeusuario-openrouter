@@ -19,6 +19,9 @@ App de auditoria de histórias de usuário usando IA, baseado na metodologia Mar
 - Base de Conhecimento (Few-Shot Learning para a IA)
 - Exportação para XLSX
 - Seletor de modelo Free / DeepSeek V3
+- Notificação toast + chime sonoro + Notification API + webhook Google Chat
+- Log de última consulta (modelo, tokens, custo) com persistência em localStorage
+- Tag de rollback `v1.0-stable` criada antes da otimização de batching
 
 ## Modelos de IA
 
@@ -117,7 +120,53 @@ Acesse `http://localhost:3000`.
    - Feedback técnico
    - Versão melhorada da história
    - Nota de incerteza (se aplicável)
-4. O usuário pode ajustar as notas, salvar no histórico e marcar como "exemplo de ouro"
+4. O `parseJSON()` limpa markdown/ruído antes do `JSON.parse` (tenta parse direto, extrai de ```json, ou encontra { } no texto)
+5. A resposta inclui `model`, `tokens` e `cost` — salvos no Firebase e exibidos no painel ⚙️
+6. O usuário pode ajustar as notas, salvar no histórico e marcar como "exemplo de ouro"
+
+## Notificações e Webhook
+
+### Toast + Chime
+- **Toast**: Mensagem verde no canto inferior direito por 5 segundos ao concluir lote
+- **Chime**: Tom duplo (660Hz → 880Hz) via `AudioContext` (função `playNotification`)
+
+### Notification API
+- Solicita permissão ao carregar o app (`Notification.requestPermission()`)
+- Se concedida, envia notificação nativa do sistema ao concluir auditoria em lote
+
+### Google Chat Webhook
+- URL: `GOOGLE_CHAT_WEBHOOK_URL` em `App.tsx:28`
+- Envia mensagem no formato:
+  ```
+  ✅ *Auditoria concluída!*
+  📊 N histórias processadas.
+  🔗 https://storyanalyst-ai.netlify.app
+  ```
+- Executado via `sendWebhook(count)` ao final de cada lote bem-sucedido
+
+## Persistência local (localStorage)
+
+| Chave | Conteúdo |
+|-------|----------|
+| `storyanalyst_use_free` | Booleano — modelo Free (true) ou DeepSeek V3 (false) |
+| `storyanalyst_last_usage` | JSON `{ model, tokens, cost }` da última consulta |
+| `storyanalyst_owners_list` | Array de nomes de agilistas (com CRUD no dropdown) |
+
+## CI/CD (Netlify)
+
+- **Build command**: `npm run build` (gera `dist/`)
+- **Publish directory**: `dist`
+- **SPA redirect**: `/*` → `/index.html` (status 200)
+- **Variável obrigatória**: `OPENROUTER_API_KEY`
+- **Deploy automático**: conectado ao repositório GitHub, deploya a cada push na `main`
+
+## Pontos de retorno
+
+| Tag | Descrição |
+|-----|-----------|
+| `v1.0-stable` | Versão segura anterior à otimização de batching. Criada em 27/07/2026. |
+
+Para reverter: `git checkout v1.0-stable` ou `git reset --hard v1.0-stable`
 
 ## Créditos e dependências
 
