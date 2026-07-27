@@ -25,6 +25,8 @@ import {
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 
+const GOOGLE_CHAT_WEBHOOK_URL = "https://chat.googleapis.com/v1/spaces/AAAAeV_-wRI/messages?key=AIzaSyDdI0hCZtE6vySjMm-WEfRq3CPzqKqqsHI&token=T5F6QuitaL4_tsxCNqvYpJ5OjfHbuJ3mYvTkCOIUd9k";
+
 const INITIAL_OWNERS = [
   "LAURO SANDSON AGRA DA SILVA",
   "ANNA BEATRIZ GUIMARÃES DE ARAÚJO",
@@ -101,6 +103,39 @@ const App: React.FC = () => {
   }, [toast]);
   
   const showToast = (msg: string) => setToast(msg);
+  
+  const playBeep = () => {
+    try {
+      const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const osc = ctx.createOscillator();
+      osc.type = 'sine';
+      osc.frequency.value = 800;
+      osc.connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.3);
+    } catch {}
+  };
+  
+  const sendWebhook = async (count: number) => {
+    try {
+      if (!GOOGLE_CHAT_WEBHOOK_URL) return;
+      await fetch(GOOGLE_CHAT_WEBHOOK_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          text: `✅ *Auditoria concluída!*\n\n📊 ${count} histórias processadas.\n🔗 ${window.location.href}`
+        })
+      });
+    } catch (e) {
+      console.warn("Webhook falhou:", e);
+    }
+  };
+  
+  useEffect(() => {
+    if ('Notification' in window && Notification.permission === 'default') {
+      Notification.requestPermission();
+    }
+  }, []);
   
   const dropdownRef = useRef<HTMLDivElement>(null);
   const configRef = useRef<HTMLDivElement>(null);
@@ -341,7 +376,13 @@ const App: React.FC = () => {
         if (i + batchSize < rowsToProcess.length) await new Promise(r => setTimeout(r, 2000));
       }
       setStatus(AnalysisStatus.SUCCESS);
-      showToast(`Auditoria concluida! ${rowsToProcess.length} historias processadas.`);
+      const msg = `Auditoria concluida! ${rowsToProcess.length} historias processadas.`;
+      showToast(msg);
+      playBeep();
+      if ('Notification' in window && Notification.permission === 'granted') {
+        new Notification('StoryAnalyst AI', { body: msg });
+      }
+      sendWebhook(rowsToProcess.length);
     } catch (error) {
       console.error(error);
       setStatus(AnalysisStatus.ERROR);
